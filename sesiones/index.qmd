@@ -1,0 +1,33 @@
+---
+title: "Sesiones"
+toc: false
+---
+
+Cada sesión incluye: **contenidos** (esta web), **presentación** (Reveal.js) y **laboratorio** (Marimo).
+
+::: {.callout-note}
+**Estado de desarrollo.** Las sesiones **1** y **9** están desarrolladas por completo (contenidos, diapositivas y laboratorio) y sirven de plantilla. Las demás tienen el plan detallado (objetivos, agenda, contenidos, práctica y lecturas) y se completarán siguiendo la misma plantilla.
+:::
+
+| # | Sesión | Materiales |
+|--:|---|---|
+| 1 | [Bienvenida y entorno de trabajo reproducible](s01/index.qmd) | [Slides](s01/slides.qmd) · [Lab](s01/lab.html) |
+| 2 | [Python científico I: lenguaje y NumPy](s02/index.qmd) | |
+| 3 | [Python científico II: pandas y series de tiempo](s03/index.qmd) | |
+| 4 | [Visualización y EDA de series financieras y macro](s04/index.qmd) | |
+| 5 | [Teoría de conjuntos y fundamentos de probabilidad](s05/index.qmd) | |
+| 6 | [Variables aleatorias, esperanza y momentos](s06/index.qmd) | |
+| 7 | [Normal y log-normal; LGN y TCL](s07/index.qmd) | |
+| 8 | [Distribuciones t de Student, χ² y F](s08/index.qmd) | |
+| 9 | [Colas pesadas y asimetría en datos financieros](s09/index.qmd) | [Slides](s09/slides.qmd) · [Lab](s09/lab.html) |
+| 10 | [Estimación puntual: momentos y máxima verosimilitud](s10/index.qmd) | |
+| 11 | [Intervalos de confianza y bootstrap](s11/index.qmd) | |
+| 12 | [Pruebas de hipótesis paramétricas (Z, t)](s12/index.qmd) | |
+| 13 | [Pruebas no paramétricas y de bondad de ajuste](s13/index.qmd) | |
+| 14 | [Matrices: tipos, operaciones y matriz de covarianzas](s14/index.qmd) | |
+| 15 | [Sistemas lineales, rango e inversibilidad](s15/index.qmd) | |
+| 16 | [MCO en forma matricial](s16/index.qmd) | |
+| 17 | [Autovalores, autovectores y formas cuadráticas](s17/index.qmd) | |
+| 18 | [SVD y PCA](s18/index.qmd) | |
+| 19 | [Taller integrador: análisis de una cartera](s19/index.qmd) | |
+| 20 | [Evaluación final y puente al Módulo 2](s20/index.qmd) | |

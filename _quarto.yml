@@ -1,0 +1,86 @@
+project:
+  type: website
+  output-dir: _site
+  pre-render: uv run python scripts/export_labs.py
+  resources:
+    - sesiones/*/lab.html
+
+website:
+  title: "Módulo 1 · Estadística y Álgebra Matricial"
+  description: "Especialización en Econometría de Series de Tiempo y Ciencia de Datos"
+  page-footer:
+    left: "Especialización Superior en Econometría de Series de Tiempo y Ciencia de Datos"
+    right: "Hecho con [Quarto](https://quarto.org) · [Marimo](https://marimo.io) · [uv](https://docs.astral.sh/uv/)"
+  search: true
+  navbar:
+    left:
+      - text: "Programa"
+        href: programa.qmd
+      - text: "Sesiones"
+        href: sesiones/index.qmd
+      - text: "Entorno"
+        href: entorno.qmd
+      - text: "Evaluación"
+        href: evaluacion.qmd
+      - text: "Bibliografía"
+        href: bibliografia.qmd
+    tools:
+      - icon: github
+        href: https://github.com/manumath/estalgmat
+  sidebar:
+    - title: "Sesiones"
+      style: docked
+      search: false
+      contents:
+        - sesiones/index.qmd
+        - section: "A · Python y EDA"
+          contents:
+            - sesiones/s01/index.qmd
+            - sesiones/s02/index.qmd
+            - sesiones/s03/index.qmd
+            - sesiones/s04/index.qmd
+        - section: "B · Probabilidad y distribuciones"
+          contents:
+            - sesiones/s05/index.qmd
+            - sesiones/s06/index.qmd
+            - sesiones/s07/index.qmd
+            - sesiones/s08/index.qmd
+            - sesiones/s09/index.qmd
+        - section: "C · Inferencia estadística"
+          contents:
+            - sesiones/s10/index.qmd
+            - sesiones/s11/index.qmd
+            - sesiones/s12/index.qmd
+            - sesiones/s13/index.qmd
+        - section: "D · Álgebra matricial"
+          contents:
+            - sesiones/s14/index.qmd
+            - sesiones/s15/index.qmd
+            - sesiones/s16/index.qmd
+            - sesiones/s17/index.qmd
+            - sesiones/s18/index.qmd
+        - section: "E · Integración"
+          contents:
+            - sesiones/s19/index.qmd
+            - sesiones/s20/index.qmd
+
+lang: es
+bibliography: references.bib
+
+format:
+  html:
+    theme:
+      light: [flatly, assets/styles.scss]
+      dark: [darkly, assets/styles.scss]
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    smooth-scroll: true
+    fig-align: center
+
+execute:
+  freeze: auto
+  echo: true
+  warning: false
+
+jupyter: python3

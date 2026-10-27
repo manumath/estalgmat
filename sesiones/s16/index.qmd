@@ -1,0 +1,77 @@
+---
+title: "S16 · MCO en forma matricial"
+subtitle: "Bloque D · Álgebra matricial"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 16 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Expresar el modelo lineal $y=X\beta+\varepsilon$ y deducir las ecuaciones normales.
+- Obtener $\hat\beta$, $\operatorname{Var}(\hat\beta)$ y los estadísticos t y F en forma matricial.
+- Interpretar las matrices proyección $P$ y $M$ y el teorema de Gauss–Markov.
+- Diagnosticar multicolinealidad (VIF, $\kappa$) y estimar el beta del CAPM.
+
+## Pregunta motivadora
+
+> ¿Qué hace realmente `sm.OLS(y, X).fit()` por dentro?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Mostrar la salida de `statsmodels` y pedir al grupo identificar cada número con una fórmula. |
+| 10–25 | **Exposición** | Modelo lineal matricial; ecuaciones normales $X'X\hat\beta=X'y$; $\hat\beta=(X'X)^{-1}X'y$. |
+| 25–35 | **Exposición** | Propiedades: insesgadez, $\operatorname{Var}(\hat\beta)=\sigma^2(X'X)^{-1}$, Gauss–Markov; $P$, $M$, $R^2$. |
+| 35–45 | **Exposición** | Inferencia: $t$, $F$, errores robustos HC; multicolinealidad; estabilidad numérica (QR). |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | MCO “a mano” con NumPy y comparación con `statsmodels` (coeficientes, EE, $R^2$). |
+| 60–80 | **Laboratorio** | Beta de CAPM y modelo de 3 factores sobre retornos simulados; VIF; error estándar HC1. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+$$
+\hat\beta=(X'X)^{-1}X'y,\qquad
+\hat y=Py,\ \ P=X(X'X)^{-1}X',\qquad
+e=My,\ \ M=I-P.
+$$
+
+$$
+\operatorname{Var}(\hat\beta\mid X)=\sigma^2(X'X)^{-1},\qquad
+\hat\sigma^2=\frac{e'e}{n-k},\qquad
+F=\frac{(R\hat\beta-r)'\,[R(X'X)^{-1}R']^{-1}(R\hat\beta-r)/q}{\hat\sigma^2}.
+$$
+
+$P$ y $M$ son simétricas e idempotentes; $\operatorname{tr}(P)=k$, $\operatorname{tr}(M)=n-k$.
+
+Estimador robusto (White): $\widehat{\operatorname{Var}}_{HC}=(X'X)^{-1}\bigl(\sum e_i^2x_ix_i'\bigr)(X'X)^{-1}$.
+
+## Laboratorio (Marimo)
+
+Clase `MCO` propia con `fit`, `summary` y contraste de restricciones lineales; validación contra `statsmodels`.
+
+## Tarea
+
+Estimar el beta de 3 activos respecto a un índice, contrastar $H_0:\alpha=0,\beta=1$ con F y reportar errores robustos.
+
+## Lecturas
+
+- @hansen2022, caps. 3–4.
+- @greene2018, caps. 2–4.
+
+## Conexión con la especialización
+
+VAR se estima por MCO ecuación por ecuación; SVAR, GMM y panel se construyen sobre el mismo álgebra.
+
+---
+
+[← S15](../s15/index.qmd) · [Todas las sesiones](../index.qmd) · [S17 →](../s17/index.qmd)

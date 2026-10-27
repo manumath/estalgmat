@@ -1,0 +1,72 @@
+---
+title: "S18 · Descomposición en valores singulares (SVD) y PCA"
+subtitle: "Bloque D · Álgebra matricial"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 18 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Enunciar y calcular la SVD $A=U\Sigma V'$ y relacionarla con los autovalores de $A'A$.
+- Aproximar matrices por bajo rango (Eckart–Young) y medir la pérdida de información.
+- Derivar PCA vía SVD/autovalores de la covarianza; interpretar *loadings*, *scores* y varianza explicada.
+- Extraer nivel, pendiente y curvatura de una curva de rendimientos.
+
+## Pregunta motivadora
+
+> Una curva de 8 vencimientos se mueve cada día… ¿cuántos “factores” explican el 99 % de sus movimientos?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–20 | **Apertura** | **Control 2** (15 min): inferencia y álgebra matricial. Devolución de la tarea de S17 (5 min). |
+| 20–30 | **Exposición** | SVD: existencia, valores singulares, vínculo con autovalores de $A'A$ y $AA'$; Eckart–Young. |
+| 30–45 | **Exposición** | PCA: derivación, estandarización, número de componentes (scree, 80 %, Kaiser); PCA vía SVD. |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | SVD con `np.linalg.svd`; reconstrucción rango-$k$ y error de Frobenius. |
+| 60–80 | **Laboratorio** | PCA de `curva_tasas()`: loadings (nivel/pendiente/curvatura), varianza explicada, comparación con `sklearn.decomposition.PCA`. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+$$
+A=U\Sigma V',\quad U'U=I,\ V'V=I,\ \Sigma=\operatorname{diag}(\sigma_1\ge\sigma_2\ge\dots\ge0);\qquad
+\sigma_i^2=\lambda_i(A'A).
+$$
+
+**Eckart–Young:** la mejor aproximación de rango $k$ (en norma de Frobenius/espectral) es $A_k=\sum_{i\le k}\sigma_iu_iv_i'$, con error $\bigl(\sum_{i>k}\sigma_i^2\bigr)^{1/2}$.
+
+**PCA:** con $\tilde X$ centrada, $\tilde X=U\Sigma V'$; *loadings* = columnas de $V$; *scores* = $U\Sigma$;
+varianza explicada del componente $j$: $\sigma_j^2/\sum_i\sigma_i^2$.
+
+**Precauciones:** sensible a la escala (estandarizar si las unidades difieren); solo capta estructura lineal y ortogonal.
+
+## Laboratorio (Marimo)
+
+Panel de control Marimo: slider de $k$ y reconstrucción de la curva de tasas.
+
+## Tarea
+
+PCA sobre retornos de 8–10 activos: cantidad de factores, interpretación del primer componente (¿factor de mercado?) y estabilidad por submuestras.
+
+## Lecturas
+
+- @strang2016, cap. 7.
+- @tsay2010, cap. 9 (PCA y factores).
+
+## Conexión con la especialización
+
+Modelos de factores, APT, FAVAR y nowcasting con factores dinámicos (Módulos 3–4) parten de PCA/SVD.
+
+---
+
+[← S17](../s17/index.qmd) · [Todas las sesiones](../index.qmd) · [S19 →](../s19/index.qmd)

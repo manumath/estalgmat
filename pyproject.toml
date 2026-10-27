@@ -1,0 +1,38 @@
+[project]
+name = "estalgmat"
+version = "0.1.0"
+description = "Módulo 1 · Especialización en Econometría de Series de Tiempo y Ciencia de Datos: Revisión de Estadística y Álgebra Matricial"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "scipy>=1.12",
+    "statsmodels>=0.14",
+    "scikit-learn>=1.4",
+    "matplotlib>=3.8",
+    "plotly>=5.20",
+    "marimo>=0.9",
+    "ipykernel>=6.29",
+    "nbformat>=5.10",
+    "nbclient>=0.10",
+    "pyyaml>=6.0",
+    "tabulate>=0.9",
+]
+
+[project.optional-dependencies]
+# Descarga de datos reales (opcional; el curso funciona offline con datos simulados)
+datos = ["yfinance>=0.2.40", "pandas-datareader>=0.10"]
+
+[dependency-groups]
+dev = ["quarto-cli>=1.5", "ruff>=0.5"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/estalgmat"]
+
+[tool.ruff]
+line-length = 100

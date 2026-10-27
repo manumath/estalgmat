@@ -1,0 +1,16 @@
+---
+title: "Bibliografía"
+nocite: |
+  @*
+---
+
+Bibliografía base y complementaria del módulo. Los textos marcados como *recomendado* se citan en las páginas de cada sesión.
+
+::: {#refs}
+:::
+
+## Documentación de herramientas
+
+- [Quarto](https://quarto.org/docs/) · [Reveal.js en Quarto](https://quarto.org/docs/presentations/revealjs/)
+- [Marimo](https://docs.marimo.io) · [uv](https://docs.astral.sh/uv/) · [Positron](https://positron.posit.co/)
+- [NumPy](https://numpy.org/doc/) · [pandas](https://pandas.pydata.org/docs/) · [SciPy](https://docs.scipy.org/doc/scipy/) · [statsmodels](https://www.statsmodels.org/)

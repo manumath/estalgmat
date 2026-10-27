@@ -1,0 +1,147 @@
+---
+title: "S01 · Bienvenida y entorno de trabajo reproducible"
+subtitle: "Bloque A · Entorno, Python y EDA"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 1 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Describir el programa, el Módulo 1 y su rol en la especialización.
+- Instalar y configurar Positron, uv, Git, Quarto y Marimo; verificar el entorno con una sola orden (`uv sync`).
+- Explicar la estructura de un proyecto reproducible: `pyproject.toml`, `uv.lock`, semillas, control de versiones.
+- Ejecutar un cuaderno Marimo y renderizar una página Quarto con código Python.
+- Producir el primer gráfico de una serie de retornos y enunciar tres “hechos estilizados”.
+
+## Pregunta motivadora
+
+> Tu análisis funciona en tu computadora. ¿Funcionará dentro de seis meses, en la computadora de tu colega y en el servidor del banco?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Presentaciones, expectativas y encuesta diagnóstica de 5 preguntas (Python, estadística, álgebra, uso de Git, Quarto). |
+| 10–25 | **Exposición** | El programa y el Módulo 1: mapa de los 7 módulos, qué se necesita de cada bloque, evaluación. |
+| 25–45 | **Exposición** | Proyecto reproducible: Positron + uv + Git + Quarto + Marimo; anatomía de `pyproject.toml` y `uv.lock`; flujo de trabajo diario. |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–65 | **Laboratorio** | Clonar el repositorio, `uv sync`, abrir en Positron, seleccionar el intérprete `.venv`, `uv run quarto check`. |
+| 65–80 | **Laboratorio** | Abrir `sesiones/s01/lab.py` en Marimo; modificar un parámetro y ver la reactividad; renderizar esta página con `uv run quarto preview`. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+### Mapa de herramientas
+
+| Capa | Herramienta | Qué resuelve |
+|---|---|---|
+| IDE | **Positron** | Editor + consola + explorador de variables + soporte Quarto/Jupyter/Marimo |
+| Entorno | **uv** | Versión de Python y dependencias *bloqueadas* (`uv.lock`) |
+| Cuaderno | **Marimo** (o Jupyter) | Cuaderno reactivo, 100 % `.py`, sin estado oculto |
+| Publicación | **Quarto** | Sitio, informes (HTML/PDF) y presentaciones Reveal.js desde el mismo código |
+| Versiones | **Git** | Historial, colaboración y entrega de tareas |
+
+### Anatomía de un proyecto reproducible
+
+```
+estalgmat/
+├── pyproject.toml     # dependencias declaradas
+├── uv.lock            # versiones exactas (se versiona)
+├── .python-version    # 3.12
+├── _quarto.yml        # configuración del sitio
+├── src/estalgmat/     # código reutilizable (datos, utilidades)
+└── sesiones/sXX/      # index.qmd · slides.qmd · lab.py
+```
+
+### Flujo diario
+
+```bash
+uv sync                                  # entorno idéntico al del docente
+uv run marimo edit sesiones/s01/lab.py   # trabajar un laboratorio
+uv run quarto preview                    # ver el sitio mientras se edita
+uv add scikit-learn                      # nueva dependencia → pyproject + uv.lock
+git add -A && git commit -m "S01: tarea" && git push
+```
+
+::: {.callout-tip}
+## Regla de oro
+Un resultado solo existe si otra persona puede obtenerlo con `git clone && uv sync && uv run quarto render`. Se fijan **semillas** y **versiones**.
+:::
+
+### Primer vistazo a los datos (demostración ejecutada)
+
+Comprobamos que el entorno funciona y miramos una serie de retornos simulada con las propiedades de un activo real (modelo GARCH(1,1) con errores $t$ que estudiaremos en el Módulo 2).
+
+```{python}
+#| label: entorno
+import sys, numpy as np, pandas as pd, scipy, statsmodels, matplotlib
+print("Python     ", sys.version.split()[0])
+for m in (np, pd, scipy, statsmodels, matplotlib):
+    print(f"{m.__name__:<11}", m.__version__)
+```
+
+```{python}
+#| label: fig-primer-vistazo
+#| fig-cap: "Precio, retorno diario y retorno al cuadrado de un activo simulado."
+#| fig-height: 6.5
+import matplotlib.pyplot as plt
+from estalgmat import retornos_garch_t, precios_desde_retornos
+
+df = retornos_garch_t(n=2500, seed=2026)
+precio = precios_desde_retornos(df["ret"])
+
+fig, ax = plt.subplots(3, 1, figsize=(8, 6.5), sharex=True)
+ax[0].plot(precio, lw=1);              ax[0].set_ylabel("Precio")
+ax[1].plot(df["ret"], lw=.6);          ax[1].set_ylabel("Retorno (%)")
+ax[2].plot(df["ret"]**2, lw=.6, c="C3"); ax[2].set_ylabel("Retorno² ")
+fig.tight_layout()
+```
+
+### Tres hechos estilizados que aparecen en @fig-primer-vistazo
+
+1. El **precio** parece tener tendencia y “deriva”; el **retorno** oscila alrededor de un nivel estable.
+2. Hay **agrupamiento de volatilidad**: periodos tranquilos y turbulentos (panel inferior).
+3. Existen **retornos extremos** mucho mayores de lo que sugeriría una normal (S9).
+
+```{python}
+#| label: tbl-resumen
+#| tbl-cap: "Estadísticos descriptivos de los retornos simulados."
+from scipy import stats
+r = df["ret"]
+pd.DataFrame({
+    "media": [r.mean()], "desv. est.": [r.std()],
+    "asimetría": [stats.skew(r)], "curtosis exceso": [stats.kurtosis(r)],
+    "mín": [r.min()], "máx": [r.max()],
+}, index=["ret"]).round(3)
+```
+
+La **curtosis en exceso** distinta de cero ya es una señal de colas pesadas (para una normal vale 0). Volveremos a esto con rigor en las sesiones 6, 8 y 9.
+
+## Laboratorio (Marimo)
+
+Cuaderno de verificación del entorno con un control deslizante que cambia la volatilidad y la deriva de una caminata aleatoria. Entregable: captura del `uv run quarto check` y del cuaderno funcionando.
+
+## Tarea
+
+(1) Crear una cuenta de GitHub y un fork del repositorio del curso; (2) hacer un commit que añada tu nombre a `participantes.md`; (3) completar el cuaderno `lab.py` con el ejercicio final.
+
+## Lecturas
+
+- @mckinney2022, cap. 1 y apéndice A (instalación).
+- Documentación de uv: *Working on projects*.
+
+## Conexión con la especialización
+
+El entorno reproducible definido aquí se usa sin cambios en los 6 módulos restantes.
+
+---
+
+[Todas las sesiones](../index.qmd) · [S02 →](../s02/index.qmd)

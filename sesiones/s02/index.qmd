@@ -1,0 +1,81 @@
+---
+title: "S02 · Python científico I: lenguaje y NumPy"
+subtitle: "Bloque A · Entorno, Python y EDA"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 2 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Escribir funciones tipadas y documentadas, usar comprensiones, módulos y manejo básico de errores.
+- Crear y manipular `ndarray`: indexación, máscaras booleanas, *broadcasting* y reducciones por eje.
+- Generar números aleatorios reproducibles con `np.random.default_rng`.
+- Justificar con mediciones por qué la vectorización supera a los bucles de Python.
+
+## Pregunta motivadora
+
+> ¿Cuánto tarda simular un millón de caminatas aleatorias con un `for`? ¿Y de forma vectorizada?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Retroalimentación de la tarea de S1 (entorno). Demo: bucle vs. vector con 1 000 000 de pasos. |
+| 10–20 | **Exposición** | Lenguaje: tipos, listas/tuplas/dicts/sets, control de flujo, funciones, *type hints*, docstrings, módulos y `import`. |
+| 20–30 | **Exposición** | Comprensiones, generadores, excepciones, f-strings, `pathlib`; estilo (PEP 8, `ruff`). |
+| 30–45 | **Exposición** | NumPy: `ndarray`, dtype, shape, indexación y máscaras, *broadcasting*, `axis`, `np.linalg` (adelanto), generador `default_rng`. |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | Funciones puras: media, varianza y desviación estándar sin librerías; contraste con `np.mean/var/std` (`ddof`). |
+| 60–80 | **Laboratorio** | Retornos simples y logarítmicos; caminata aleatoria con deriva; 10 000 trayectorias vectorizadas; medición con `time.perf_counter`. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+### Retornos y caminata aleatoria (hilo conductor)
+
+$$
+r_t^{s}=\frac{P_t}{P_{t-1}}-1,\qquad r_t=\ln P_t-\ln P_{t-1},\qquad
+P_t=P_{t-1}\,e^{\mu+\sigma\varepsilon_t},\ \ \varepsilon_t\sim N(0,1).
+$$
+
+### Ideas clave de NumPy
+
+- Un `ndarray` es homogéneo y contiguo en memoria: las operaciones se ejecutan en C.
+- *Broadcasting*: las dimensiones se alinean desde la derecha; una dimensión de tamaño 1 se “estira”.
+- Máscaras booleanas: `x[x < -0.03]` selecciona la cola izquierda.
+- Reproducibilidad: `rng = np.random.default_rng(2026)` y pasar `rng` como argumento, nunca usar estado global.
+
+```python
+rng = np.random.default_rng(2026)
+eps = rng.standard_normal((10_000, 250))        # 10 000 trayectorias de 250 días
+P = 100 * np.exp(np.cumsum(0.0003 + 0.01 * eps, axis=1))
+```
+
+## Laboratorio (Marimo)
+
+Cuaderno con ejercicios autoevaluables (la celda marca ✔/✘). Entregable: función `simular_gbm(n_paths, n_steps, mu, sigma, seed)` con docstring y pruebas con `assert`.
+
+## Tarea
+
+Implementar `retornos(precios, tipo="log")` y `max_drawdown(precios)` vectorizadas; comparar su tiempo con la versión con bucle (tabla en Markdown).
+
+## Lecturas
+
+- @mckinney2022, caps. 2–4 (NumPy y estructuras de datos).
+- Tutorial oficial de NumPy: *NumPy: the absolute basics for beginners*.
+
+## Conexión con la especialización
+
+Los simuladores de este módulo son la base para validar por Monte Carlo los estimadores de ARMA/GARCH (Módulo 2) y los muestreadores MCMC (Módulo 7).
+
+---
+
+[← S01](../s01/index.qmd) · [Todas las sesiones](../index.qmd) · [S03 →](../s03/index.qmd)

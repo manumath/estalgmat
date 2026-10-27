@@ -1,0 +1,10 @@
+/*-- scss:defaults --*/
+$code-block-bg-alpha: -.12;
+
+/*-- scss:rules --*/
+.sesion-meta {
+  display: flex; flex-wrap: wrap; gap: .5rem 1rem;
+  font-size: .9rem; margin-bottom: 1.5rem;
+}
+.sesion-meta .badge-s { padding: .15rem .6rem; border-radius: 1rem; background: var(--bs-primary); color: #fff; }
+.agenda td:first-child { white-space: nowrap; font-variant-numeric: tabular-nums; }

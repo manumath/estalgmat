@@ -1,0 +1,73 @@
+---
+title: "S06 · Variables aleatorias, esperanza y momentos"
+subtitle: "Bloque B · Probabilidad y distribuciones"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 6 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Distinguir variables discretas y continuas; usar pmf, pdf, cdf y cuantiles.
+- Calcular esperanza, varianza, covarianza y momentos; interpretar asimetría y curtosis.
+- Hallar la distribución de una transformación $Y=g(X)$.
+- Aplicar Chebyshev y Jensen; estimar $E[g(X)]$ por Monte Carlo.
+
+## Pregunta motivadora
+
+> Si $\ln P$ es simétrica, ¿por qué el precio esperado no es $e^{E[\ln P]}$?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Demo: histograma de $X$ y de $e^{X}$; ¿coinciden sus medias transformadas? |
+| 10–20 | **Exposición** | Variable aleatoria, pmf/pdf/cdf, cuantil $F^{-1}(p)$ y su vínculo con VaR. |
+| 20–35 | **Exposición** | Esperanza, varianza, covarianza; momentos y momentos centrales; asimetría y curtosis; función generadora de momentos. |
+| 35–45 | **Exposición** | Transformaciones, desigualdades de Jensen y Chebyshev; combinaciones lineales y portafolio de dos activos. |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | Momentos teóricos vs. muestrales con `scipy.stats` (`.stats(moments='mvsk')`). |
+| 60–80 | **Laboratorio** | Monte Carlo de $E[e^X]$, verificación de Jensen, y varianza de un portafolio de 2 activos como función del peso. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+$$
+\mu=E[X],\quad \sigma^2=E[(X-\mu)^2],\quad
+\gamma_1=\frac{E[(X-\mu)^3]}{\sigma^3},\quad
+\kappa=\frac{E[(X-\mu)^4]}{\sigma^4}\ (\text{exceso}=\kappa-3).
+$$
+
+**Combinación lineal:** $E[aX+bY]=aE[X]+bE[Y]$, $\ \operatorname{Var}(aX+bY)=a^2\sigma_X^2+b^2\sigma_Y^2+2ab\,\sigma_{XY}$.
+
+**Jensen:** para $g$ convexa, $E[g(X)]\ge g(E[X])$. En particular, $X\sim N(\mu,\sigma^2)\Rightarrow E[e^X]=e^{\mu+\sigma^2/2}>e^{\mu}$.
+
+**Cuantil y VaR:** $\mathrm{VaR}_{\alpha}=-F_R^{-1}(\alpha)$ para el retorno $R$.
+
+## Laboratorio (Marimo)
+
+Estimaciones Monte Carlo con error estándar y gráfico de convergencia.
+
+## Tarea
+
+Derivar $E[X]$ y $\operatorname{Var}(X)$ de una uniforme y de una exponencial y verificarlas por simulación.
+
+## Lecturas
+
+- @casella2002, caps. 2–3.
+- @mcneil2015, cap. 2 (cuantiles y medidas de riesgo).
+
+## Conexión con la especialización
+
+Momentos y cuantiles reaparecen en GMM, GARCH y VaR; la convexidad (Jensen) explica sesgos de pronóstico en modelos log.
+
+---
+
+[← S05](../s05/index.qmd) · [Todas las sesiones](../index.qmd) · [S07 →](../s07/index.qmd)

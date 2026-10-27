@@ -1,0 +1,70 @@
+---
+title: "S15 · Sistemas lineales, rango e inversibilidad"
+subtitle: "Bloque D · Álgebra matricial"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 15 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Resolver $Ax=b$ por eliminación de Gauss–Jordan e interpretar la solución (única, infinita, inexistente).
+- Calcular el rango y vincularlo a la independencia lineal y a la consistencia del sistema.
+- Enunciar condiciones equivalentes de inversibilidad.
+- Evaluar el condicionamiento numérico y usar la pseudoinversa.
+
+## Pregunta motivadora
+
+> Si dos regresores son casi idénticos, ¿por qué el software devuelve coeficientes enormes y de signos opuestos?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Sistema $2\times2$ con matriz casi singular: pequeñas perturbaciones en $b$ cambian drásticamente $x$. |
+| 10–20 | **Exposición** | Gauss–Jordan, forma escalonada reducida, tipos de solución. |
+| 20–30 | **Exposición** | Rango, espacio columna/nulo, independencia lineal; Rouché–Frobenius. |
+| 30–45 | **Exposición** | Inversibilidad (teorema de equivalencias), número de condición $\kappa(A)$, pseudoinversa de Moore–Penrose. |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | Resolver sistemas con `np.linalg.solve`; rango con `matrix_rank`. |
+| 60–80 | **Laboratorio** | Matriz de Hilbert y condicionamiento; colinealidad casi perfecta en un diseño $X$; `lstsq` vs. inversa explícita. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+**Teorema (equivalencias).** Para $A\in\mathbb R^{n\times n}$ son equivalentes:
+$A$ inversible $\iff\det A\neq0\iff\operatorname{rang}A=n\iff Ax=0$ solo tiene la solución nula $\iff$ columnas linealmente independientes.
+
+**Rouché–Frobenius:** $Ax=b$ es consistente $\iff\operatorname{rang}A=\operatorname{rang}[A\mid b]$.
+
+**Condicionamiento:** $\kappa(A)=\|A\|\,\|A^{-1}\|=\sigma_{\max}/\sigma_{\min}$; se pierden aprox. $\log_{10}\kappa$ cifras decimales.
+
+**Pseudoinversa:** $A^{+}=(A'A)^{-1}A'$ si $A$ tiene rango columna completo.
+
+## Laboratorio (Marimo)
+
+Cuaderno con experimentos numéricos que muestran por qué **no** se invierte $X'X$ explícitamente en la práctica.
+
+## Tarea
+
+Clasificar 6 sistemas (única/infinitas/inconsistente) y verificar con NumPy; ejemplo propio de multicolinealidad y su efecto en $\kappa(X'X)$.
+
+## Lecturas
+
+- @strang2016, caps. 2–3.
+- @greene2018, apéndice A.2–A.4.
+
+## Conexión con la especialización
+
+Identificación en SVAR (rango de restricciones) y cointegración (rango de $\Pi$ en Johansen) usan estos conceptos.
+
+---
+
+[← S14](../s14/index.qmd) · [Todas las sesiones](../index.qmd) · [S16 →](../s16/index.qmd)

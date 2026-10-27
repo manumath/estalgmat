@@ -1,0 +1,79 @@
+---
+title: "S05 · Teoría de conjuntos y fundamentos de probabilidad"
+subtitle: "Bloque B · Probabilidad y distribuciones"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 5 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Operar con conjuntos (unión, intersección, complemento, partición) y aplicar las leyes de De Morgan.
+- Definir espacio muestral, evento y medida de probabilidad (axiomas de Kolmogorov).
+- Calcular probabilidades condicionales, aplicar independencia, probabilidad total y teorema de Bayes.
+- Verificar resultados por simulación Monte Carlo.
+
+## Pregunta motivadora
+
+> Una alerta de default acierta el 90 % de las veces, pero solo el 2 % de las empresas quiebran. Si suena la alerta, ¿cuál es la probabilidad real de default?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Votación en vivo: respuesta intuitiva al problema de la alerta de default; se revela al final de la exposición. |
+| 10–20 | **Exposición** | Conjuntos: pertenencia, inclusión, operaciones, De Morgan, producto cartesiano, particiones. |
+| 20–35 | **Exposición** | Probabilidad: $\Omega$, eventos, $\sigma$-álgebra (idea), axiomas, consecuencias ($P(A^c)$, inclusión-exclusión), conteo básico. |
+| 35–45 | **Exposición** | Condicional, independencia, probabilidad total y Bayes; aplicaciones a riesgo de crédito y regímenes. |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | Operaciones de conjuntos en Python (`set`) y con máscaras booleanas sobre una serie de retornos. |
+| 60–80 | **Laboratorio** | Simulación del problema de la alerta de default; frecuencia empírica de “caída > 2 %” y su probabilidad condicional al régimen de alta volatilidad. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+### Axiomas de Kolmogorov
+
+$P(A)\ge 0$; $P(\Omega)=1$; si $A_i$ son disjuntos, $P\bigl(\bigcup_i A_i\bigr)=\sum_i P(A_i)$.
+
+### Condicional, total y Bayes
+
+$$
+P(A\mid B)=\frac{P(A\cap B)}{P(B)},\qquad
+P(B)=\sum_i P(B\mid A_i)P(A_i),\qquad
+P(A_i\mid B)=\frac{P(B\mid A_i)\,P(A_i)}{\sum_j P(B\mid A_j)\,P(A_j)}.
+$$
+
+### Ejemplo central
+
+Con $P(\text{default})=0{,}02$, sensibilidad $0{,}90$ y falsos positivos $0{,}10$:
+$P(\text{default}\mid\text{alerta})=\frac{0{,}9\cdot0{,}02}{0{,}9\cdot0{,}02+0{,}1\cdot0{,}98}\approx 0{,}155$.
+**Tasa base** y calidad del clasificador (se retoma en logit/probit y ROC, Módulo 3).
+
+## Laboratorio (Marimo)
+
+Simulación de 1 000 000 de empresas para verificar el resultado de Bayes; probabilidades empíricas condicionadas por régimen.
+
+## Tarea
+
+Problemas 1–6 de la guía (conjuntos, Bayes) + un ejercicio de simulación propio sobre una cartera de crédito con dos segmentos.
+
+## Lecturas
+
+- @casella2002, cap. 1.
+- @hogg2019, cap. 1.
+
+## Conexión con la especialización
+
+Probabilidad condicional es la base de esperanzas condicionales (pronóstico), de Markov-Switching y de la clasificación probit/logit.
+
+---
+
+[← S04](../s04/index.qmd) · [Todas las sesiones](../index.qmd) · [S06 →](../s06/index.qmd)

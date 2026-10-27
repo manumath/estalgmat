@@ -1,0 +1,77 @@
+---
+title: "S03 · Python científico II: pandas y series de tiempo"
+subtitle: "Bloque A · Entorno, Python y EDA"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 3 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Construir y manipular `Series`/`DataFrame` con `DatetimeIndex`.
+- Aplicar `shift`, `diff`, `pct_change`, `rolling`, `expanding`, `resample` y `groupby` a series financieras y macro.
+- Alinear series de distinta frecuencia (diaria vs. mensual) y tratar datos faltantes sin sesgos.
+- Leer/guardar datos (CSV, Parquet) y cargar datos reales con caché local.
+
+## Pregunta motivadora
+
+> El precio diario de un activo y un indicador macro mensual: ¿cómo los ponemos en la misma tabla sin mirar al futuro?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Repaso de la tarea de S2. Pregunta: ¿qué es *look-ahead bias* y cómo aparece al unir series? |
+| 10–20 | **Exposición** | Estructuras: `Series`, `DataFrame`, `Index`; lectura/escritura (CSV, Parquet); tipos y fechas (`pd.to_datetime`). |
+| 20–35 | **Exposición** | Series de tiempo: indexación por fecha, `resample`, `asfreq`, `shift/diff/pct_change`, ventanas móviles y expansivas. |
+| 35–45 | **Exposición** | Combinar y limpiar: `merge/join/concat`, `merge_asof`, NaN (`ffill`, interpolación, *cuándo no*), `groupby` y `pivot`. |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | Cargar `retornos_garch_t()`, `serie_macro()` y (opcional) `cargar_yahoo()`; inspeccionar con `info/describe`. |
+| 60–80 | **Laboratorio** | Panel de 4 activos + variable macro: retornos, volatilidad móvil de 21 días, resample mensual, `merge_asof`, guardar a Parquet. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+### Convenciones para series de tiempo
+
+- Índice ordenado, sin duplicados, con frecuencia explícita (`df.index.freq`).
+- Transformaciones sin mirar el futuro: `rolling(21).std()` usa solo información pasada; `center=True` **no** debe usarse para pronóstico.
+- Volatilidad realizada anualizada: $\hat\sigma_t=\sqrt{252}\,\mathrm{sd}(r_{t-20},\dots,r_t)$.
+
+```python
+df["vol21"] = df["ret"].rolling(21).std() * np.sqrt(252)
+mensual = df["ret"].resample("MS").sum()          # log-retornos suman
+macro_d = macro.reindex(df.index, method="ffill") # solo hacia adelante
+```
+
+### Datos faltantes
+
+Mecanismo (MCAR/MAR/MNAR), imputación hacia adelante vs. interpolación, y por qué interpolar linealmente un precio altera la varianza.
+
+## Laboratorio (Marimo)
+
+Construcción guiada de un conjunto de datos de análisis, con una función `construir_panel()` reutilizable en las sesiones siguientes.
+
+## Tarea
+
+Descargar (o simular) 5 activos y 2 variables macro; entregar un `panel.parquet` y un script `uv run python panel.py` que lo regenere.
+
+## Lecturas
+
+- @mckinney2022, caps. 5–11.
+- Documentación de pandas: *Time series / date functionality*.
+
+## Conexión con la especialización
+
+Las operaciones de rezago y diferencia son el lenguaje de los operadores $L$ y $\Delta$ en ARMA, VAR y cointegración.
+
+---
+
+[← S02](../s02/index.qmd) · [Todas las sesiones](../index.qmd) · [S04 →](../s04/index.qmd)

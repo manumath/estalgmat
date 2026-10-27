@@ -1,0 +1,74 @@
+---
+title: "S10 · Estimación puntual: momentos y máxima verosimilitud"
+subtitle: "Bloque C · Inferencia estadística"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 10 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Construir estimadores por el método de momentos (MM) y por máxima verosimilitud (MV).
+- Evaluar estimadores: sesgo, varianza, ECM, consistencia, eficiencia.
+- Calcular la información de Fisher y la normalidad asintótica del EMV.
+- Estimar numéricamente los parámetros de una $t$ de Student para retornos.
+
+## Pregunta motivadora
+
+> Dos analistas estiman la volatilidad de un activo con fórmulas distintas y obtienen cifras diferentes: ¿cuál es “mejor” y por qué?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–20 | **Apertura** | **Control 1** (15 min): Python/EDA/probabilidad. Devolución de la tarea de S9 (5 min). |
+| 20–35 | **Exposición** | Muestra aleatoria, estadístico, estimador; MM; función de verosimilitud, score e información de Fisher. |
+| 35–45 | **Exposición** | Propiedades (sesgo, ECM, consistencia, invarianza del EMV, Cramér–Rao) y normalidad asintótica. |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | EMV de $N(\mu,\sigma^2)$ y exponencial en forma cerrada; verificar sesgo de $\hat\sigma^2_{MV}$ por simulación. |
+| 60–80 | **Laboratorio** | EMV numérico de $t(\nu,\mu,\sigma)$ con `scipy.optimize.minimize`; comparación con `t.fit` y error estándar vía hessiana. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+$$
+\ell(\theta)=\sum_{i=1}^n\ln f(x_i;\theta),\qquad
+\hat\theta_{MV}=\arg\max_\theta\ell(\theta),\qquad
+\sqrt n(\hat\theta-\theta_0)\xrightarrow{d}N\bigl(0,\,I(\theta_0)^{-1}\bigr),
+$$
+
+con $I(\theta)=-E\bigl[\partial^2\ln f/\partial\theta\,\partial\theta'\bigr]$.
+
+**Error cuadrático medio:** $\operatorname{ECM}(\hat\theta)=\operatorname{Var}(\hat\theta)+\operatorname{sesgo}^2$.
+
+**Sesgo de la varianza MV:** $E[\hat\sigma^2_{MV}]=\tfrac{n-1}{n}\sigma^2$; $S^2$ es insesgado.
+
+**Práctica numérica:** reparametrizar ($\sigma=e^{s}$, $\nu=2+e^{u}$) para optimizar sin restricciones; varios valores iniciales.
+
+## Laboratorio (Marimo)
+
+Comparativo MM vs. MV para la $t$; gráfico de la log-verosimilitud perfilada en $\nu$.
+
+## Tarea
+
+Derivar el EMV de una exponencial y de una Poisson; estimar $\nu$ de la $t$ para 3 activos y comparar.
+
+## Lecturas
+
+- @casella2002, caps. 6–7.
+- @hansen2022, caps. 5–6 (MV y MM).
+
+## Conexión con la especialización
+
+Todo el Módulo 2 (ARMA, GARCH, MS) se estima por MV; los errores estándar vienen de la información de Fisher.
+
+---
+
+[← S09](../s09/index.qmd) · [Todas las sesiones](../index.qmd) · [S11 →](../s11/index.qmd)

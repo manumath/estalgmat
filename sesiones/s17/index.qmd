@@ -1,0 +1,73 @@
+---
+title: "S17 · Autovalores, autovectores y formas cuadráticas"
+subtitle: "Bloque D · Álgebra matricial"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 17 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Calcular autovalores/autovectores y diagonalizar; usar el teorema espectral en matrices simétricas.
+- Clasificar formas cuadráticas (definida positiva/semidefinida) mediante autovalores.
+- Aplicar la descomposición de Cholesky para simular y para identificar choques.
+- Evaluar estabilidad de AR(p)/VAR(1) mediante la matriz compañera.
+
+## Pregunta motivadora
+
+> ¿Por qué un AR(2) es estacionario o no según el módulo de las raíces de su polinomio? ¿Dónde están esas raíces “en una matriz”?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Demostración: potencias de una matriz $A^k$ y comportamiento según el mayor $|\lambda|$. |
+| 10–20 | **Exposición** | $Av=\lambda v$; polinomio característico; diagonalización $A=V\Lambda V^{-1}$; teorema espectral $A=Q\Lambda Q'$. |
+| 20–30 | **Exposición** | Formas cuadráticas, definitud, $\Sigma\succeq0$; Cholesky $\Sigma=LL'$. |
+| 30–45 | **Exposición** | Matriz compañera; estabilidad de AR(p) y VAR(1); cadenas de Markov y distribución estacionaria como autovector. |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | `np.linalg.eig/eigh`, verificación de $A=V\Lambda V^{-1}$; definitud de matrices de covarianza. |
+| 60–80 | **Laboratorio** | Simulación de normal multivariada con Cholesky; matriz compañera de AR(2) y VAR(1) con raíces dentro/fuera del círculo unidad; distribución estacionaria de una cadena de 2 regímenes. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+$$
+\det(A-\lambda I)=0,\qquad A^k=V\Lambda^kV^{-1},\qquad
+x'Ax>0\ \forall x\neq0\iff\lambda_i(A)>0\ \forall i\ \ (A=A').
+$$
+
+**Cholesky:** si $\Sigma\succ0$, existe $L$ triangular inferior con $\Sigma=LL'$; si $z\sim N(0,I)$, entonces $Lz\sim N(0,\Sigma)$.
+
+**Matriz compañera** de $y_t=\phi_1y_{t-1}+\phi_2y_{t-2}+\varepsilon_t$:
+$F=\begin{pmatrix}\phi_1&\phi_2\\1&0\end{pmatrix}$; estacionario $\iff|\lambda_i(F)|<1$.
+
+**Markov:** $\pi'P=\pi'$ → $\pi$ es el autovector izquierdo asociado a $\lambda=1$.
+
+## Laboratorio (Marimo)
+
+Gráfico del plano complejo con los autovalores y el círculo unidad, interactivo en $\phi_1,\phi_2$.
+
+## Tarea
+
+Demostrar que $\Sigma$ es semidefinida positiva; hallar la distribución estacionaria de una cadena de 3 estados (crisis/normal/auge).
+
+## Lecturas
+
+- @strang2016, caps. 6–7.
+- @tsay2010, cap. 2 (AR y estacionariedad).
+
+## Conexión con la especialización
+
+Estacionariedad de VAR (Módulo 4), rango de cointegración en Johansen (Módulo 5), Markov-Switching (Módulo 2) y SVAR con Cholesky.
+
+---
+
+[← S16](../s16/index.qmd) · [Todas las sesiones](../index.qmd) · [S18 →](../s18/index.qmd)

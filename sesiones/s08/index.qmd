@@ -1,0 +1,78 @@
+---
+title: "S08 · Distribuciones t de Student, χ² y F"
+subtitle: "Bloque B · Probabilidad y distribuciones"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 8 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Construir $\chi^2$, $t$ y $F$ a partir de normales independientes.
+- Derivar la distribución de $\bar X$ y $S^2$ en muestras normales.
+- Interpretar los grados de libertad y su efecto sobre las colas.
+- Reconocer dónde aparecen estas distribuciones en ADF, Ljung–Box, Jarque–Bera y F de regresión.
+
+## Pregunta motivadora
+
+> ¿Por qué para muestras pequeñas usamos cuantiles t y no normales, y cuánto cambia el valor crítico?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Tabla comparativa de cuantiles 97,5 % de $t_\nu$ vs. $N(0,1)$ para $\nu=2,5,30$. |
+| 10–25 | **Exposición** | $\chi^2_k$ como suma de cuadrados de normales; $t_\nu=Z/\sqrt{\chi^2_\nu/\nu}$; $F=(\chi^2_a/a)/(\chi^2_b/b)$. |
+| 25–35 | **Exposición** | Teorema de Student–Fisher: independencia de $\bar X$ y $S^2$; pivotes $t_{n-1}$ y $\chi^2_{n-1}$. |
+| 35–45 | **Exposición** | La $t$ como mezcla de escala de normales y como modelo de retornos con colas pesadas; momentos que existen ($\nu>2$, $\nu>4$). |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | Derivación por simulación de $\chi^2$, $t$ y $F$; verificación con QQ-plots. |
+| 60–80 | **Laboratorio** | Ajuste de $t$ a retornos simulados (`scipy.stats.t.fit`), curvas de densidad y tabla de valores críticos vs. $\nu$. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+$$
+\chi^2_k=\sum_{i=1}^k Z_i^2,\qquad
+t_\nu=\frac{Z}{\sqrt{\chi^2_\nu/\nu}},\qquad
+F_{a,b}=\frac{\chi^2_a/a}{\chi^2_b/b}.
+$$
+
+**Muestras normales:** $\ \dfrac{(n-1)S^2}{\sigma^2}\sim\chi^2_{n-1}$ y $\ \dfrac{\bar X-\mu}{S/\sqrt n}\sim t_{n-1}$.
+
+**Momentos de $t_\nu$:** $\operatorname{Var}=\nu/(\nu-2)$ si $\nu>2$; curtosis en exceso $=6/(\nu-4)$ si $\nu>4$.
+
+| Estadístico | Distribución nula (aprox.) |
+|---|---|
+| Ljung–Box $Q(m)$ | $\chi^2_m$ |
+| Jarque–Bera | $\chi^2_2$ |
+| F de significancia conjunta | $F_{q,\,n-k}$ |
+| ADF | no estándar (Dickey–Fuller) |
+
+## Laboratorio (Marimo)
+
+Un tablero Marimo con slider de $\nu$ que dibuja la densidad $t_\nu$ frente a la normal y sus probabilidades de cola.
+
+## Tarea
+
+Calcular $P(|T|>3)$ para $\nu\in\{3,5,10,30,\infty\}$ y comentar el resultado en términos de riesgo de cola.
+
+## Lecturas
+
+- @casella2002, sec. 5.3.
+- @hogg2019, cap. 3.
+
+## Conexión con la especialización
+
+Errores t en GARCH (Módulo 2), pruebas F y χ² en todo el programa, y priors/posteriors conjugados (Módulo 7).
+
+---
+
+[← S07](../s07/index.qmd) · [Todas las sesiones](../index.qmd) · [S09 →](../s09/index.qmd)

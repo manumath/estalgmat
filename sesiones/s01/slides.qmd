@@ -1,0 +1,175 @@
+---
+title: "Bienvenida y entorno de trabajo reproducible"
+subtitle: "Módulo 1 · Sesión 1 — Econometría de Series de Tiempo y Ciencia de Datos"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    code-line-numbers: false
+    footer: "Módulo 1 · S01"
+    toc: false
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Hoja de ruta de hoy
+
+::: {.incremental}
+1. El programa y el lugar del Módulo 1
+2. Herramientas: Positron · uv · Git · Quarto · Marimo
+3. Un proyecto **reproducible**
+4. Laboratorio: instalar, verificar, primer gráfico
+:::
+
+## La especialización en un vistazo
+
+| Módulo | Tema |
+|:--:|---|
+| **1** | **Estadística y álgebra matricial** |
+| 2 | Modelos univariados lineales y no lineales (ARMA, GARCH, MS) |
+| 3 | Econometría financiera y Machine Learning |
+| 4 | Modelos multivariados (VAR, SVAR, FAVAR) |
+| 5 | Cointegración y largo plazo |
+| 6 | Datos de panel dinámicos |
+| 7 | Econometría bayesiana |
+
+::: {.notes}
+Recalcar que lo que se hace en el módulo 1 reaparece en todos los demás: MCO matricial, autovalores, Cholesky, SVD, MV, bootstrap.
+:::
+
+## Módulo 1: 20 sesiones × 90 min
+
+::: {.columns}
+::: {.column width="55%"}
+- **A** · Python y EDA (S1–4)
+- **B** · Probabilidad y distribuciones (S5–9)
+- **C** · Inferencia (S10–13)
+- **D** · Álgebra matricial (S14–18)
+- **E** · Taller y evaluación (S19–20)
+:::
+::: {.column width="45%"}
+**Cada sesión**
+
+10′ apertura · 35′ teoría · 5′ pausa · 30′ laboratorio · 10′ cierre
+:::
+:::
+
+## ¿Por qué un entorno reproducible?
+
+> “Funciona en mi computadora.”
+
+. . .
+
+- Versiones de librerías cambian los resultados
+- Hay estado oculto en los cuadernos clásicos
+- Entregas imposibles de verificar
+
+. . .
+
+**Meta:** que cualquiera obtenga **exactamente** tu resultado con tres comandos.
+
+## Las herramientas
+
+| Capa | Herramienta |
+|---|---|
+| IDE | **Positron** |
+| Entorno / paquetes | **uv** |
+| Cuadernos | **Marimo** (o Jupyter) |
+| Publicación | **Quarto** (HTML · PDF · Reveal.js) |
+| Versiones | **Git** |
+
+## uv en 30 segundos
+
+```bash
+uv init mi-proyecto        # crea pyproject.toml
+uv add numpy pandas        # añade dependencias y las bloquea en uv.lock
+uv sync                    # reproduce el entorno
+uv run python script.py    # ejecuta dentro del entorno
+```
+
+. . .
+
+`uv.lock` **se versiona**: fija cada versión transitiva.
+
+## Marimo: cuadernos reactivos
+
+- Archivos `.py` puros → diffs limpios en Git
+- Si cambias una celda, se actualizan las dependientes
+- Widgets (`mo.ui.slider`) sin callbacks
+
+```bash
+uv run marimo edit sesiones/s01/lab.py
+```
+
+## Quarto: un solo código, tres productos
+
+::: {.columns}
+::: {.column width="33%"}
+**Sitio**\
+`_quarto.yml`
+:::
+::: {.column width="33%"}
+**Informes**\
+HTML / PDF
+:::
+::: {.column width="33%"}
+**Slides**\
+`format: revealjs`
+:::
+:::
+
+```bash
+uv run quarto preview
+```
+
+## Primer vistazo a los datos
+
+```{python}
+#| echo: true
+#| output-location: slide
+import matplotlib.pyplot as plt
+from estalgmat import retornos_garch_t, precios_desde_retornos
+
+df = retornos_garch_t(n=2500, seed=2026)
+fig, ax = plt.subplots(2, 1, figsize=(9, 5), sharex=True)
+ax[0].plot(precios_desde_retornos(df["ret"]), lw=1); ax[0].set_ylabel("Precio")
+ax[1].plot(df["ret"], lw=.6);                         ax[1].set_ylabel("Retorno (%)")
+fig.tight_layout()
+```
+
+## Tres hechos estilizados
+
+::: {.incremental}
+1. El precio “deriva”; el **retorno** es estable en nivel
+2. La **volatilidad se agrupa**
+3. Hay **retornos extremos** (colas pesadas)
+:::
+
+. . .
+
+Los estudiaremos con rigor en las sesiones 4, 6–9 y en el Módulo 2.
+
+## Laboratorio (30 min)
+
+1. `git clone` + `uv sync`
+2. Abrir en Positron; elegir intérprete `.venv`
+3. `uv run quarto check`
+4. `uv run marimo edit sesiones/s01/lab.py`
+5. `uv run quarto preview`
+
+::: {.callout-tip}
+Quien termine antes: cambiar la semilla y ver cómo cambia el gráfico.
+:::
+
+## Tarea
+
+- Fork en GitHub y commit con tu nombre en `participantes.md`
+- Completar el ejercicio final de `lab.py`
+- Leer: [@mckinney2022] cap. 1
+
+## Referencias {.smaller}
+
+::: {#refs}
+:::

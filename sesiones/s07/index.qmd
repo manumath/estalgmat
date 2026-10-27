@@ -1,0 +1,72 @@
+---
+title: "S07 · Normal y log-normal; ley de los grandes números y TCL"
+subtitle: "Bloque B · Probabilidad y distribuciones"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 7 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Usar la normal: estandarización, cuantiles, cerradura bajo combinaciones lineales.
+- Modelar precios con log-normal y relacionarla con el movimiento browniano geométrico discreto.
+- Enunciar y simular la LGN y el TCL; reconocer cuándo fallan (varianza infinita).
+- Distinguir retornos simples y logarítmicos en agregación temporal.
+
+## Pregunta motivadora
+
+> Sumar 250 retornos diarios, ¿produce siempre una normal? ¿Qué pasa si los retornos tienen colas muy pesadas?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Experimento: distribución de la media de 30 observaciones de una exponencial. |
+| 10–25 | **Exposición** | Normal univariada: pdf, estandarización, regla 68–95–99,7, cerradura; log-normal y GBM discreto. |
+| 25–35 | **Exposición** | LGN (débil y fuerte) y TCL clásico; velocidad de convergencia y Berry–Esseen (idea). |
+| 35–45 | **Exposición** | Agregación temporal: suma de log-retornos, escala $\sqrt{T}$ y su límite cuando hay dependencia. |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | TCL por simulación con exponencial, Bernoulli y t(3); `qq` del promedio estandarizado. |
+| 60–80 | **Laboratorio** | GBM: simular precios, verificar log-normalidad, comparar $E[P_T]$ simulada y teórica; regla de la raíz del tiempo. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+$$
+Y\sim N(\mu,\sigma^2)\Rightarrow X=e^{Y}\sim\text{LogN}(\mu,\sigma^2),\quad
+E[X]=e^{\mu+\sigma^2/2},\ \ \operatorname{Var}(X)=(e^{\sigma^2}-1)e^{2\mu+\sigma^2}.
+$$
+
+**TCL:** si $X_i$ iid con media $\mu$ y varianza $\sigma^2<\infty$,
+$\ \sqrt n\,(\bar X_n-\mu)/\sigma \xrightarrow{d} N(0,1)$.
+
+**Agregación:** $r_{t\to t+h}=\sum_{j=1}^h r_{t+j}$; con iid, $\operatorname{sd}=\sqrt h\,\sigma$.
+Con agrupamiento de volatilidad la regla $\sqrt h$ es solo una aproximación (se revisa en GARCH).
+
+## Laboratorio (Marimo)
+
+Tres experimentos de convergencia con sliders (tamaño muestral, distribución) construidos en Marimo.
+
+## Tarea
+
+Demostrar que $E[e^{Y}]=e^{\mu+\sigma^2/2}$ usando la MGF; simular y reportar el error relativo para $\sigma\in\{0{,}1,\,0{,}5,\,1\}$.
+
+## Lecturas
+
+- @casella2002, cap. 5.
+- @hogg2019, cap. 5.
+
+## Conexión con la especialización
+
+La normalidad asintótica de estimadores (MV, MCO, GMM) y la hipótesis de random walk de la EMH descansan en estos resultados.
+
+---
+
+[← S06](../s06/index.qmd) · [Todas las sesiones](../index.qmd) · [S08 →](../s08/index.qmd)
