@@ -1,0 +1,89 @@
+---
+title: "Autovalores, autovectores y formas cuadráticas"
+subtitle: "Módulo 1 · Sesión 17"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S17"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+¿Por qué un AR(2) es estacionario o no según el módulo de las raíces de su polinomio?
+
+. . .
+
+¿Dónde están esas raíces “dentro de una matriz”?
+
+## Autovalores y autovectores
+
+$$Av=\lambda v,\qquad\det(A-\lambda I)=0$$
+
+Diagonalización: $A=V\Lambda V^{-1}$ → $A^k=V\Lambda^kV^{-1}$
+
+**Teorema espectral** ($A=A'$): $A=Q\Lambda Q'$ con $Q'Q=I$, $\lambda_i\in\mathbb R$.
+
+## Potencias
+
+```{python}
+import numpy as np
+A = np.array([[0.9, 0.3], [0.1, 0.7]])
+lam, V = np.linalg.eig(A)
+print(lam, np.allclose(V @ np.diag(lam**10) @ np.linalg.inv(V), np.linalg.matrix_power(A, 10)))
+```
+
+El comportamiento de $A^k$ lo domina $\max|\lambda_i|$.
+
+## Formas cuadráticas
+
+$$x'Ax>0\ \forall x\ne0\iff\lambda_i(A)>0\ \forall i\quad(A=A')$$
+
+- Covarianzas: semidefinidas positivas
+- Hessianas en un máximo: definidas negativas
+
+## Cholesky
+
+$\Sigma=LL'$ ($L$ triangular inferior). Si $z\sim N(0,I)$: $Lz\sim N(0,\Sigma)$.
+
+```{python}
+from estalgmat import retornos_factor
+S = np.cov(retornos_factor(2000, p=4, seed=3)[["A1","A2","A3","A4"]].to_numpy(), rowvar=False)
+L = np.linalg.cholesky(S); np.allclose(L @ L.T, S)
+```
+
+En SVAR: $u_t=L\varepsilon_t$ (identificación recursiva).
+
+## Matriz compañera
+
+$$y_t=\phi_1y_{t-1}+\phi_2y_{t-2}+\varepsilon_t,\qquad F=\begin{pmatrix}\phi_1&\phi_2\\1&0\end{pmatrix}$$
+
+Estacionario $\iff\max|\lambda_i(F)|<1$.
+
+## Círculo unidad
+
+```{python}
+#| output-location: slide
+import matplotlib.pyplot as plt
+def companion(phi):
+    p = len(phi); F = np.zeros((p, p)); F[0] = phi; F[1:, :-1] = np.eye(p - 1); return F
+fig, ax = plt.subplots(figsize=(4.8, 4.6)); t = np.linspace(0, 2*np.pi, 300); ax.plot(np.cos(t), np.sin(t), "k", lw=.8)
+for phi, c in (([.5, .3], "C0"), ([.7, .5], "C3")):
+    ev = np.linalg.eigvals(companion(phi)); ax.scatter(ev.real, ev.imag, c=c, label=f"φ={phi}")
+ax.set_aspect("equal"); ax.legend(); ax.grid(alpha=.3)
+```
+
+## VAR(1) y Markov
+
+- VAR(1): estacionario $\iff\max|\lambda(A)|<1$
+- Cadena de Markov: $\pi'P=\pi'$ → $\pi$ = autovector izquierdo de $\lambda=1$
+
+Base de Markov-Switching (Módulo 2).
+
+## Tarea
+
+Demostrar que $\Sigma\succeq0$; distribución estacionaria de una cadena de 3 estados.

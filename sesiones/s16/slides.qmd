@@ -1,0 +1,83 @@
+---
+title: "MCO en forma matricial"
+subtitle: "Módulo 1 · Sesión 16"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S16"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+¿Qué hace realmente `sm.OLS(y, X).fit()` por dentro?
+
+## Modelo y ecuaciones normales
+
+$$y=X\beta+\varepsilon,\qquad\min_\beta\|y-X\beta\|^2$$
+
+$$X'X\hat\beta=X'y\ \Rightarrow\ \hat\beta=(X'X)^{-1}X'y$$
+
+## Matrices proyección
+
+$$P=X(X'X)^{-1}X',\qquad M=I-P$$
+
+- $\hat y=Py$, $e=My$
+- Simétricas e idempotentes; $\operatorname{tr}P=k$, $\operatorname{tr}M=n-k$
+- $X'e=0$
+
+## Propiedades
+
+$$\operatorname{Var}(\hat\beta\mid X)=\sigma^2(X'X)^{-1},\qquad\hat\sigma^2=\frac{e'e}{n-k}$$
+
+**Gauss–Markov:** MCO es el MELI (mejor estimador lineal insesgado).
+
+## A mano vs. `statsmodels`
+
+```{python}
+import numpy as np, pandas as pd, statsmodels.api as sm
+from estalgmat import retornos_factor
+df = retornos_factor(1500, p=5, seed=3)
+y = df["A3"].to_numpy(); X = np.column_stack([np.ones(len(df)), df["mercado"]])
+XtXi = np.linalg.inv(X.T @ X); b = XtXi @ X.T @ y; e = y - X @ b
+se = np.sqrt(e @ e / (len(y) - 2) * np.diag(XtXi))
+fit = sm.OLS(y, X).fit()
+pd.DataFrame({"propio": b, "EE": se, "statsmodels": fit.params, "EE sm": fit.bse}, index=["α", "β"]).round(4)
+```
+
+## Inferencia matricial
+
+$$F=\frac{(R\hat\beta-r)'\,[R(X'X)^{-1}R']^{-1}(R\hat\beta-r)/q}{\hat\sigma^2}\sim F_{q,n-k}$$
+
+Errores robustos (White):
+
+$$\widehat{\operatorname{Var}}_{HC}=(X'X)^{-1}\Bigl(\textstyle\sum e_i^2x_ix_i'\Bigr)(X'X)^{-1}$$
+
+## CAPM: $H_0:\alpha=0,\beta=1$
+
+```{python}
+from scipy import stats
+V = e @ e / (len(y) - 2) * XtXi; R, r = np.eye(2), np.array([0., 1.])
+d = R @ b - r; F = d @ np.linalg.inv(R @ V @ R.T) @ d / 2
+(round(float(F), 4), round(float(stats.f.sf(F, 2, len(y) - 2)), 4))
+```
+
+## Multicolinealidad
+
+$$\mathrm{VIF}_j=\frac1{1-R_j^2},\qquad\kappa(X'X)$$
+
+VIF $>10$ → varianza inflada más de 10 veces. Remedios: quitar/combinar regresores, PCA, regularización.
+
+## Estabilidad numérica
+
+::: {.callout-important}
+Resolver con **QR** o **SVD** (`lstsq`), no con `inv(X.T @ X)`: $\kappa(X'X)=\kappa(X)^2$.
+:::
+
+## Tarea
+
+Betas de 3 activos contra un índice; contrastar $H_0:\alpha=0,\beta=1$ con F y reportar errores robustos.

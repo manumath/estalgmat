@@ -6,7 +6,7 @@ toc: false
 Cada sesión incluye: **contenidos** (esta web), **presentación** (Reveal.js) y **laboratorio** (Marimo).
 
 ::: {.callout-note}
-**Estado de desarrollo.** Las sesiones **1–13** están desarrolladas por completo (contenidos, diapositivas y laboratorio) y sirven de plantilla. Las demás tienen el plan detallado (objetivos, agenda, contenidos, práctica y lecturas) y se completarán siguiendo la misma plantilla.
+**Estado de desarrollo.** Las sesiones **1–18** están desarrolladas por completo (contenidos, diapositivas y laboratorio) y sirven de plantilla. Las demás tienen el plan detallado (objetivos, agenda, contenidos, práctica y lecturas) y se completarán siguiendo la misma plantilla.
 :::
 
 | # | Sesión | Materiales |
@@ -24,10 +24,10 @@ Cada sesión incluye: **contenidos** (esta web), **presentación** (Reveal.js) y
 | 11 | [Intervalos de confianza y bootstrap](s11/index.qmd) | [Slides](s11/slides.qmd) · [Lab](s11/lab.html) |
 | 12 | [Pruebas de hipótesis paramétricas (Z, t)](s12/index.qmd) | [Slides](s12/slides.qmd) · [Lab](s12/lab.html) |
 | 13 | [Pruebas no paramétricas y de bondad de ajuste](s13/index.qmd) | [Slides](s13/slides.qmd) · [Lab](s13/lab.html) |
-| 14 | [Matrices: tipos, operaciones y matriz de covarianzas](s14/index.qmd) | |
-| 15 | [Sistemas lineales, rango e inversibilidad](s15/index.qmd) | |
-| 16 | [MCO en forma matricial](s16/index.qmd) | |
-| 17 | [Autovalores, autovectores y formas cuadráticas](s17/index.qmd) | |
-| 18 | [SVD y PCA](s18/index.qmd) | |
+| 14 | [Matrices: tipos, operaciones y matriz de covarianzas](s14/index.qmd) | [Slides](s14/slides.qmd) · [Lab](s14/lab.html) |
+| 15 | [Sistemas lineales, rango e inversibilidad](s15/index.qmd) | [Slides](s15/slides.qmd) · [Lab](s15/lab.html) |
+| 16 | [MCO en forma matricial](s16/index.qmd) | [Slides](s16/slides.qmd) · [Lab](s16/lab.html) |
+| 17 | [Autovalores, autovectores y formas cuadráticas](s17/index.qmd) | [Slides](s17/slides.qmd) · [Lab](s17/lab.html) |
+| 18 | [SVD y PCA](s18/index.qmd) | [Slides](s18/slides.qmd) · [Lab](s18/lab.html) |
 | 19 | [Taller integrador: análisis de una cartera](s19/index.qmd) | |
 | 20 | [Evaluación final y puente al Módulo 2](s20/index.qmd) | |

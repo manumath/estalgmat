@@ -4,7 +4,7 @@ subtitle: "Bloque D · Álgebra matricial"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 18 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 18 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -49,6 +49,93 @@ $$
 varianza explicada del componente $j$: $\sigma_j^2/\sum_i\sigma_i^2$.
 
 **Precauciones:** sensible a la escala (estandarizar si las unidades difieren); solo capta estructura lineal y ortogonal.
+
+### Demostración ejecutada: SVD y su relación con los autovalores
+
+```{python}
+#| label: svd
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+np.set_printoptions(precision=4, suppress=True)
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+
+rng = np.random.default_rng(18)
+A = rng.standard_normal((6, 4))
+U, s, Vt = np.linalg.svd(A, full_matrices=False)
+print("A = UΣVᵀ:", np.allclose(U @ np.diag(s) @ Vt, A))
+print("σᵢ² = λᵢ(AᵀA):", np.allclose(s**2, np.sort(np.linalg.eigvalsh(A.T @ A))[::-1]))
+print("‖A‖_F² = Σσᵢ²:", np.isclose(np.linalg.norm(A, "fro")**2, np.sum(s**2)))
+```
+
+### Aproximación de bajo rango (Eckart–Young)
+
+```{python}
+#| label: tbl-eckart
+#| tbl-cap: "Error de Frobenius de la mejor aproximación de rango k, y su valor teórico √Σ_{i>k}σᵢ²."
+B = rng.standard_normal((50, 12)) @ np.diag(np.linspace(3, .1, 12))
+U, s, Vt = np.linalg.svd(B, full_matrices=False)
+filas = {}
+for k in (1, 2, 4, 8, 12):
+    Bk = (U[:, :k] * s[:k]) @ Vt[:k]
+    filas[k] = {"error ‖B−B_k‖_F": np.linalg.norm(B - Bk, "fro"), "teórico": np.sqrt(np.sum(s[k:]**2))}
+pd.DataFrame(filas).T.rename_axis("k").round(4)
+```
+
+### PCA de la curva de rendimientos: nivel, pendiente, curvatura
+
+```{python}
+#| label: tbl-pca-curva
+#| tbl-cap: "Varianza explicada por componente principal de los cambios diarios de la curva (8 vencimientos)."
+from estalgmat import curva_tasas
+curva = curva_tasas(1500, seed=11)
+dY = curva.diff().dropna()
+Xc = dY.to_numpy() - dY.to_numpy().mean(0)
+U, s, Vt = np.linalg.svd(Xc, full_matrices=False)
+var_exp = s**2 / np.sum(s**2)
+pd.DataFrame({"% varianza": 100 * var_exp, "% acumulado": 100 * np.cumsum(var_exp)},
+             index=[f"PC{i}" for i in range(1, 9)]).round(2)
+```
+
+```{python}
+#| label: fig-loadings
+#| fig-cap: "Cargas (loadings) de los tres primeros componentes: nivel (casi constante), pendiente (cambia de signo) y curvatura (forma de U)."
+#| fig-height: 3.4
+plt.figure(figsize=(7.5, 3.4))
+for i, nom in enumerate(("PC1 (nivel)", "PC2 (pendiente)", "PC3 (curvatura)")):
+    v = Vt[i] if Vt[i].sum() > 0 or i > 0 else -Vt[i]
+    plt.plot(curva.columns, v, marker="o", label=nom)
+plt.axhline(0, c="k", lw=.5); plt.xlabel("vencimiento"); plt.ylabel("carga"); plt.legend()
+```
+
+### PCA a mano = scikit-learn
+
+```{python}
+#| label: sklearn
+pca = PCA().fit(dY.to_numpy())
+print("varianza explicada igual:", np.allclose(pca.explained_variance_ratio_, var_exp))
+print("cargas iguales (salvo signo):", all(np.allclose(np.abs(pca.components_[i]), np.abs(Vt[i])) for i in range(3)))
+```
+
+### PCA de retornos de activos: el primer componente es el mercado
+
+```{python}
+#| label: tbl-pca-ret
+#| tbl-cap: "PCA de la matriz de correlación de 8 activos con un factor de mercado: el primer componente captura el factor común."
+from estalgmat import retornos_factor
+df = retornos_factor(2000, p=8, seed=5)
+Z = df[[f"A{i}" for i in range(1, 9)]]
+Zs = (Z - Z.mean()) / Z.std()
+U, s, Vt = np.linalg.svd(Zs.to_numpy(), full_matrices=False)
+pc1 = Zs.to_numpy() @ Vt[0]
+corr = np.corrcoef(pc1, df["mercado"])[0, 1]
+print(f"|corr(PC1, mercado)| = {abs(corr):.3f}  |  % varianza PC1 = {100*s[0]**2/np.sum(s**2):.1f}")
+pd.DataFrame({"% varianza": 100 * s**2 / np.sum(s**2)}, index=[f"PC{i}" for i in range(1, 9)]).round(2)
+```
+
+::: {.callout-warning}
+Con datos estandarizados se hace PCA sobre la **correlación**; con variables en las mismas unidades (como la curva) se usa la **covarianza**. El signo de un componente es arbitrario.
+:::
 
 ## Laboratorio (Marimo)
 

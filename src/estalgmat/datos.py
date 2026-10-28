@@ -80,13 +80,33 @@ def curva_tasas(n: int = 1500, *, inicio: str = "2018-01-01", seed: int = 11) ->
     L = np.column_stack([carga_nivel, carga_pend, carga_curv])
     f = np.zeros((n, 3))
     phi = np.array([0.999, 0.99, 0.97])
-    sd = np.array([0.04, 0.05, 0.08])
+    sd = np.array([0.06, 0.04, 0.025])
     for t in range(1, n):
         f[t] = phi * f[t - 1] + rng.normal(0, sd)
     medias = np.array([3.0, -1.0, 0.5])
-    y = (f + medias) @ L.T + rng.normal(0, 0.03, size=(n, len(venc)))
+    y = (f + medias) @ L.T + rng.normal(0, 0.003, size=(n, len(venc)))
     idx = pd.bdate_range(inicio, periods=n, name="fecha")
     return pd.DataFrame(y, index=idx, columns=[f"{v:g}a" for v in venc])
+
+
+def retornos_factor(n: int = 1500, p: int = 5, *, seed: int = 3, inicio: str = "2015-01-01") -> pd.DataFrame:
+    """Retornos (en %) de ``p`` activos con un factor de mercado común (modelo de un factor).
+
+    Columnas: ``mercado`` (GARCH-t) y ``A1``..``Ap``. ``r_i = a_i + b_i * mercado + e_i`` con betas
+    entre 0,6 y 1,4 y ruido idiosincrático normal. Los betas verdaderos quedan en ``df.attrs["betas"]``
+    y los alfas en ``df.attrs["alfas"]``.
+    """
+    rng = np.random.default_rng(seed)
+    mercado = retornos_garch_t(n, seed=seed, inicio=inicio)["ret"]
+    betas = np.linspace(0.6, 1.4, p)
+    alfas = np.linspace(-0.01, 0.01, p)
+    ruido = rng.normal(0, 0.8, (n, p))
+    datos = alfas + np.outer(mercado.to_numpy(), betas) + ruido
+    df = pd.DataFrame(datos, index=mercado.index, columns=[f"A{i}" for i in range(1, p + 1)])
+    df.insert(0, "mercado", mercado)
+    df.attrs["betas"] = betas
+    df.attrs["alfas"] = alfas
+    return df
 
 
 def cargar_yahoo(

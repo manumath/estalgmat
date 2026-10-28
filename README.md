@@ -34,5 +34,5 @@ scripts/             pre-render: exporta los laboratorios Marimo a HTML
 
 | Sesiones | Contenido | Diapositivas | Laboratorio |
 |---|---|---|---|
-| S01–S13 | desarrollado | ✔ | ✔ |
-| S14–S20 | plan detallado (objetivos, agenda, contenidos, práctica) | por desarrollar | por desarrollar |
+| S01–S18 | desarrollado | ✔ | ✔ |
+| S19–S20 | plan detallado (objetivos, agenda, contenidos, práctica) | por desarrollar | por desarrollar |

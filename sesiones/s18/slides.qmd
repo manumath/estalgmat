@@ -1,0 +1,85 @@
+---
+title: "Descomposición en valores singulares (SVD) y PCA"
+subtitle: "Módulo 1 · Sesión 18"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S18"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+Una curva de 8 vencimientos se mueve cada día.
+
+. . .
+
+¿Cuántos “factores” explican el 99 % de sus movimientos?
+
+## SVD
+
+$$A=U\Sigma V',\quad U'U=I,\ V'V=I,\ \sigma_1\ge\sigma_2\ge\dots\ge0$$
+
+$$\sigma_i^2=\lambda_i(A'A),\qquad\|A\|_F^2=\sum\sigma_i^2$$
+
+Existe para **cualquier** matriz.
+
+## Bajo rango (Eckart–Young)
+
+$$A_k=\sum_{i\le k}\sigma_iu_iv_i'\quad\text{minimiza }\|A-B\|_F\text{ con rang }B\le k$$
+
+Error: $\sqrt{\sum_{i>k}\sigma_i^2}$
+
+## PCA vía SVD
+
+Con $\tilde X$ centrada: $\tilde X=U\Sigma V'$
+
+- *Loadings* = columnas de $V$
+- *Scores* = $U\Sigma$
+- Varianza explicada: $\sigma_j^2/\sum\sigma_i^2$
+
+## Curva de rendimientos
+
+```{python}
+#| output-location: slide
+import numpy as np, pandas as pd, matplotlib.pyplot as plt
+from estalgmat import curva_tasas
+curva = curva_tasas(1500, seed=11); dY = curva.diff().dropna()
+Xc = dY.to_numpy() - dY.to_numpy().mean(0)
+U, s, Vt = np.linalg.svd(Xc, full_matrices=False)
+plt.figure(figsize=(8, 3.8))
+for i, n in enumerate(("PC1 nivel", "PC2 pendiente", "PC3 curvatura")):
+    plt.plot(curva.columns, Vt[i], "o-", label=n)
+plt.axhline(0, c="k", lw=.5); plt.legend(); plt.grid(alpha=.3)
+```
+
+## Varianza explicada
+
+```{python}
+ve = s**2 / np.sum(s**2)
+print((100 * np.cumsum(ve)).round(2))
+```
+
+Pocos componentes capturan casi todo: **estructura factorial**.
+
+## Número de componentes
+
+- Gráfico de sedimentación (scree)
+- Varianza acumulada (≥ 80–90 %)
+- Criterio de Kaiser ($\lambda>1$ en correlación)
+
+::: {.callout-warning}
+Sensible a la escala: estandarizar si las unidades difieren. Solo capta estructura **lineal** y ortogonal.
+:::
+
+## Hacia los modelos de factores
+
+PCA → factores estadísticos (APT), FAVAR, nowcasting con factores dinámicos (Módulos 3–4).
+
+## Tarea
+
+PCA de 8–10 retornos: número de factores, interpretación de PC1 y estabilidad por submuestras.
