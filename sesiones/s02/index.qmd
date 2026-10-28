@@ -4,7 +4,7 @@ subtitle: "Bloque A · Entorno, Python y EDA"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 2 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 2 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -57,6 +57,65 @@ $$
 rng = np.random.default_rng(2026)
 eps = rng.standard_normal((10_000, 250))        # 10 000 trayectorias de 250 días
 P = 100 * np.exp(np.cumsum(0.0003 + 0.01 * eps, axis=1))
+```
+
+### Demostración ejecutada: bucle vs. vectorización
+
+```{python}
+#| label: tbl-tiempos
+#| tbl-cap: "Tiempo (s) de simular 2 000 trayectorias de 250 días."
+import time
+import numpy as np
+import pandas as pd
+
+def gbm_bucle(n_paths, n_steps, mu, sigma, rng):
+    out = []
+    for _ in range(n_paths):
+        p, tray = 100.0, []
+        for _ in range(n_steps):
+            p *= np.exp(mu + sigma * rng.standard_normal())
+            tray.append(p)
+        out.append(tray)
+    return out
+
+def gbm_vec(n_paths, n_steps, mu, sigma, rng):
+    eps = rng.standard_normal((n_paths, n_steps))
+    return 100 * np.exp(np.cumsum(mu + sigma * eps, axis=1))
+
+res = {}
+for nombre, f in (("bucle", gbm_bucle), ("vectorizado", gbm_vec)):
+    t0 = time.perf_counter()
+    f(2000, 250, 0.0003, 0.01, np.random.default_rng(1))
+    res[nombre] = time.perf_counter() - t0
+tab = pd.Series(res, name="segundos").to_frame()
+tab["factor"] = tab["segundos"] / tab.loc["vectorizado", "segundos"]
+tab.round(4)
+```
+
+### Broadcasting en una línea: estandarizar columnas
+
+```{python}
+X = np.random.default_rng(0).normal([1, 5, -3], [1, 2, 0.5], size=(1000, 3))
+Z = (X - X.mean(axis=0)) / X.std(axis=0, ddof=1)       # (1000,3) - (3,) → (1000,3)
+print("medias:", Z.mean(axis=0).round(12), " desv.:", Z.std(axis=0, ddof=1).round(12))
+```
+
+### Función con tipos, docstring y prueba
+
+```{python}
+#| label: fig-gbm
+#| fig-cap: "Veinte trayectorias del GBM y precio final medio simulado vs. teórico."
+import matplotlib.pyplot as plt
+
+def simular_gbm(n_paths: int, n_steps: int, mu: float, sigma: float, seed: int = 0) -> np.ndarray:
+    "Trayectorias de precios con retornos log N(mu, sigma²) por paso; P0 = 100."
+    rng = np.random.default_rng(seed)
+    return gbm_vec(n_paths, n_steps, mu, sigma, rng)
+
+P = simular_gbm(20_000, 250, 0.0003, 0.01, seed=7)
+teorico = 100 * np.exp(250 * (0.0003 + 0.01**2 / 2))
+print(f"E[P_250] simulado = {P[:, -1].mean():.2f} · teórico = {teorico:.2f}")
+plt.figure(figsize=(7, 3.2)); plt.plot(P[:20].T, lw=.7); plt.xlabel("día"); plt.ylabel("precio")
 ```
 
 ## Laboratorio (Marimo)

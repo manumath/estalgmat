@@ -4,7 +4,7 @@ subtitle: "Bloque A · Entorno, Python y EDA"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 3 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 3 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -54,6 +54,62 @@ macro_d = macro.reindex(df.index, method="ffill") # solo hacia adelante
 ### Datos faltantes
 
 Mecanismo (MCAR/MAR/MNAR), imputación hacia adelante vs. interpolación, y por qué interpolar linealmente un precio altera la varianza.
+
+### Demostración ejecutada: construir un panel
+
+```{python}
+#| label: panel
+import numpy as np, pandas as pd
+from estalgmat import retornos_garch_t, serie_macro
+
+activos = {f"A{i}": retornos_garch_t(1500, seed=100 + i, mu=0.02 + 0.01 * i)["ret"] for i in range(1, 5)}
+ret = pd.DataFrame(activos)
+macro = serie_macro(100, inicio="2015-01-01")            # mensual
+print(ret.index.freq, "|", macro.index.freq)
+ret.head(3)
+```
+
+```{python}
+#| label: tbl-mensual
+#| tbl-cap: "Retorno mensual (suma de log-retornos) y volatilidad realizada anualizada."
+mensual = ret.resample("MS").sum()
+vol = ret.rolling(21).std() * np.sqrt(252)
+resumen = pd.DataFrame({"ret. mensual medio": mensual.mean(), "vol. anualizada media": vol.mean()})
+resumen.round(3)
+```
+
+### Unir frecuencias sin mirar al futuro
+
+La serie macro mensual de enero se *publica* con rezago; usarla desde el 1.º de enero sería *look-ahead bias*. Con `merge_asof` cada día toma el último dato **ya disponible**:
+
+```{python}
+#| label: asof
+m = macro.shift(1).rename("macro_publicada").reset_index()   # se conoce un mes después
+d = ret[["A1"]].reset_index()
+panel = pd.merge_asof(d, m, left_on="fecha", right_on="fecha", direction="backward")
+panel = panel.set_index("fecha")
+panel.dropna().iloc[[0, 20, 200]]
+```
+
+```{python}
+#| label: fig-vol
+#| fig-cap: "Volatilidad móvil de 21 días de los cuatro activos."
+#| fig-height: 3.2
+vol.plot(figsize=(8, 3.2), lw=.8, legend=True).set_ylabel("vol. anualizada (%)")
+```
+
+### Datos faltantes: el costo de interpolar
+
+```{python}
+#| label: nan
+rng = np.random.default_rng(3)
+p = 100 * np.exp(ret["A1"].cumsum() / 100)
+p_nan = p.copy(); p_nan.iloc[rng.choice(len(p), 150, replace=False)] = np.nan
+for nombre, s in (("original", p), ("ffill", p_nan.ffill()), ("interpolado", p_nan.interpolate())):
+    print(f"{nombre:<12} desv. est. del retorno log: {np.log(s).diff().std():.5f}")
+```
+
+Interpolar linealmente suaviza el precio y **reduce** la varianza de los retornos; `ffill` crea retornos nulos seguidos de saltos grandes.
 
 ## Laboratorio (Marimo)
 

@@ -6,15 +6,15 @@ toc: false
 Cada sesión incluye: **contenidos** (esta web), **presentación** (Reveal.js) y **laboratorio** (Marimo).
 
 ::: {.callout-note}
-**Estado de desarrollo.** Las sesiones **1** y **9** están desarrolladas por completo (contenidos, diapositivas y laboratorio) y sirven de plantilla. Las demás tienen el plan detallado (objetivos, agenda, contenidos, práctica y lecturas) y se completarán siguiendo la misma plantilla.
+**Estado de desarrollo.** Las sesiones **1–4** y **9** están desarrolladas por completo (contenidos, diapositivas y laboratorio) y sirven de plantilla. Las demás tienen el plan detallado (objetivos, agenda, contenidos, práctica y lecturas) y se completarán siguiendo la misma plantilla.
 :::
 
 | # | Sesión | Materiales |
 |--:|---|---|
 | 1 | [Bienvenida y entorno de trabajo reproducible](s01/index.qmd) | [Slides](s01/slides.qmd) · [Lab](s01/lab.html) |
-| 2 | [Python científico I: lenguaje y NumPy](s02/index.qmd) | |
-| 3 | [Python científico II: pandas y series de tiempo](s03/index.qmd) | |
-| 4 | [Visualización y EDA de series financieras y macro](s04/index.qmd) | |
+| 2 | [Python científico I: lenguaje y NumPy](s02/index.qmd) | [Slides](s02/slides.qmd) · [Lab](s02/lab.html) |
+| 3 | [Python científico II: pandas y series de tiempo](s03/index.qmd) | [Slides](s03/slides.qmd) · [Lab](s03/lab.html) |
+| 4 | [Visualización y EDA de series financieras y macro](s04/index.qmd) | [Slides](s04/slides.qmd) · [Lab](s04/lab.html) |
 | 5 | [Teoría de conjuntos y fundamentos de probabilidad](s05/index.qmd) | |
 | 6 | [Variables aleatorias, esperanza y momentos](s06/index.qmd) | |
 | 7 | [Normal y log-normal; LGN y TCL](s07/index.qmd) | |

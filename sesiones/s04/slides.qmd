@@ -1,0 +1,85 @@
+---
+title: "Visualización y EDA de series financieras y macro"
+subtitle: "Módulo 1 · Sesión 04"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S04"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+¿Por qué el precio “parece” tendencial y el retorno “parece” ruido… pero el **retorno²** no lo es?
+
+## Protocolo EDA
+
+::: {.incremental}
+1. Estructura (periodo, frecuencia, faltantes)
+2. Univariado (histograma, QQ, momentos)
+3. Temporal (tendencia, estacionalidad, ACF)
+4. Atípicos (método y decisión)
+5. Hallazgos → siguientes pasos
+:::
+
+## Atípicos: z robusto
+
+$$
+z^{\text{rob}}_t=0{,}6745\,\frac{x_t-\operatorname{med}(x)}{\operatorname{MAD}(x)},\qquad |z^{\text{rob}}|>3{,}5
+$$
+
+Más estable que el z clásico porque la media y la desviación estándar se contaminan con los propios atípicos.
+
+## Descomposición STL
+
+```{python}
+#| output-location: slide
+import numpy as np, pandas as pd, matplotlib.pyplot as plt
+from statsmodels.tsa.seasonal import STL
+from statsmodels.tsa.stattools import acf
+from estalgmat import serie_macro, retornos_garch_t
+y = serie_macro()
+fig = STL(y, period=12, robust=True).fit().plot(); fig.set_size_inches(9, 5.5); fig.tight_layout()
+```
+
+## Autocorrelación
+
+$$
+\hat\rho_k=\frac{\sum_{t=k+1}^T(x_t-\bar x)(x_{t-k}-\bar x)}{\sum_{t=1}^T(x_t-\bar x)^2},\quad \text{bandas } \pm1{,}96/\sqrt T
+$$
+
+## ACF de $r$ y de $r^2$
+
+```{python}
+#| output-location: slide
+r = retornos_garch_t(3000, seed=2026)["ret"]
+fig, ax = plt.subplots(1, 2, figsize=(10, 3.5), sharey=True)
+for a, x, t in zip(ax, (r, r**2), ("r", "r²")):
+    a.bar(range(1, 26), acf(x, nlags=25)[1:], width=.6)
+    for s in (1, -1): a.axhline(s * 1.96 / np.sqrt(len(x)), ls="--", c="r", lw=.8)
+    a.set_title(f"ACF de {t}")
+fig.tight_layout()
+```
+
+## Hallazgos esperados
+
+::: {.incremental}
+1. Precio no estacionario; retorno ≈ estable
+2. $r_t$ casi sin autocorrelación
+3. $r_t^2$ **sí** autocorrelacionado → agrupamiento de volatilidad
+4. Colas pesadas (S9)
+:::
+
+## Buenas prácticas de visualización
+
+- Un mensaje por gráfico; título que lo diga
+- Ejes y unidades; misma escala al comparar
+- Referencias cruzadas en Quarto: `@fig-...`
+
+## Tarea
+
+Informe EDA en Quarto de un activo y una serie macro: ≥ 6 figuras numeradas y sección de hallazgos.

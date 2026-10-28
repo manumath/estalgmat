@@ -12,3 +12,4 @@ sesiones/*/lab.html
 .DS_Store
 
 **/*.quarto_ipynb
+__marimo__/

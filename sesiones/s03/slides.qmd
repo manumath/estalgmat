@@ -1,0 +1,83 @@
+---
+title: "Python científico II: pandas y series de tiempo"
+subtitle: "Módulo 1 · Sesión 03"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S03"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+Precio **diario** + indicador macro **mensual**: ¿cómo los unimos **sin mirar al futuro**?
+
+## Estructuras
+
+- `Series` = valores + índice
+- `DataFrame` = columnas con índice común
+- `DatetimeIndex` → indexación por fechas, `resample`, `rolling`
+
+```python
+df.loc["2020-03"]            # todo marzo de 2020
+df["ret"].resample("MS").sum()
+```
+
+## Operaciones temporales
+
+| Operación | Uso |
+|---|---|
+| `shift(k)` | rezago |
+| `diff()`, `pct_change()` | variación |
+| `rolling(w)` | ventana móvil (solo pasado) |
+| `expanding()` | acumulada |
+| `resample("MS")` | cambio de frecuencia |
+
+$$\hat\sigma_t=\sqrt{252}\,\mathrm{sd}(r_{t-20},\dots,r_t)$$
+
+## Datos
+
+```{python}
+#| output-location: slide
+import numpy as np, pandas as pd, matplotlib.pyplot as plt
+from estalgmat import retornos_garch_t, serie_macro
+ret = pd.DataFrame({f"A{i}": retornos_garch_t(1500, seed=100 + i)["ret"] for i in range(1, 5)})
+vol = ret.rolling(21).std() * np.sqrt(252)
+vol.plot(figsize=(9, 4), lw=.8).set_ylabel("vol. anualizada (%)")
+```
+
+## Look-ahead bias
+
+::: {.callout-warning}
+El dato macro de enero se conoce **después**. Unir por fecha de calendario usa información que no existía.
+:::
+
+```python
+macro = macro.shift(1)                        # disponible con un mes de rezago
+pd.merge_asof(diario, macro, on="fecha")      # último dato ya disponible
+```
+
+## Datos faltantes
+
+- `ffill`: retornos nulos y luego saltos
+- `interpolate`: suaviza → **reduce la varianza**
+- Documentar siempre el tratamiento
+
+```{python}
+p = 100 * np.exp(ret["A1"].cumsum() / 100)
+pn = p.copy(); pn.iloc[np.random.default_rng(3).choice(len(p), 150, replace=False)] = np.nan
+{k: round(float(np.log(s).diff().std()), 5) for k, s in
+ {"original": p, "ffill": pn.ffill(), "interp.": pn.interpolate()}.items()}
+```
+
+## Laboratorio
+
+Construir `construir_panel()`: 4 activos + 1 macro, volatilidad móvil, resample mensual, `merge_asof`, guardar en Parquet.
+
+## Tarea
+
+Panel de 5 activos y 2 variables macro + script `uv run python panel.py` que lo regenere.
