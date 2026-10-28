@@ -1,0 +1,93 @@
+---
+title: "Evaluación final y puente al Módulo 2"
+subtitle: "Módulo 1 · Sesión 20"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S20"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+Si los precios no son estacionarios pero los retornos sí lo parecen…
+
+. . .
+
+¿Qué significa exactamente **estacionario**?
+
+## Presentaciones
+
+- 8 min + 2 min de preguntas por equipo
+- Rúbrica: corrección técnica 35 · interpretación 25 · reproducibilidad 20 · comunicación 20
+- Demostración en vivo: un equipo sorteado clona y renderiza desde cero
+
+## De variables a procesos
+
+Una serie temporal es **una** realización de $\{X_t\}$.
+
+$$E[X_t]=\mu,\quad\operatorname{Var}(X_t)=\sigma^2,\quad\operatorname{Cov}(X_t,X_{t-k})=\gamma_k$$
+
+El TCL y la LGN clásicos suponen iid → ¿qué cambia con dependencia?
+
+## Tres procesos, mismo ruido
+
+```{python}
+#| output-location: slide
+import numpy as np, matplotlib.pyplot as plt
+from statsmodels.tsa.stattools import acf
+def ar1(phi, n=500, seed=20):
+    e = np.random.default_rng(seed).standard_normal(n); x = np.zeros(n)
+    for t in range(1, n): x[t] = phi * x[t - 1] + e[t]
+    return x
+fig, ax = plt.subplots(3, 2, figsize=(10, 5.4))
+for i, (nom, ph) in enumerate((("ruido blanco", 0), ("AR(1) φ=0,95", .95), ("caminata aleatoria", 1))):
+    x = ar1(ph); ax[i, 0].plot(x, lw=.8); ax[i, 0].set_title(nom, fontsize=9)
+    ax[i, 1].bar(range(1, 31), acf(x, nlags=30)[1:], width=.6); ax[i, 1].set_ylim(-.2, 1.05)
+fig.tight_layout()
+```
+
+## AR(1)
+
+$$X_t=\phi X_{t-1}+\varepsilon_t,\qquad\rho_k=\phi^k\ (|\phi|<1)$$
+
+Estacionario $\iff|\phi|<1\iff$ autovalor de la compañera dentro del círculo unidad (S17).
+
+## Regresión espuria
+
+```{python}
+import statsmodels.api as sm
+rng = np.random.default_rng(1); res = []
+for _ in range(300):
+    a, b = np.cumsum(rng.standard_normal(250)), np.cumsum(rng.standard_normal(250))
+    f = sm.OLS(a, sm.add_constant(b)).fit(); res.append((f.rsquared, abs(f.tvalues[1])))
+res = np.array(res); print(f"R² medio = {res[:,0].mean():.2f} | % con |t|>2 = {100*np.mean(res[:,1]>2):.0f} %")
+```
+
+::: {.callout-warning}
+Con variables no estacionarias, el t usual **no** sirve: se “descubren” relaciones inexistentes.
+:::
+
+## Hoja de ruta
+
+| Módulo 1 | Módulo 2 |
+|---|---|
+| dependencia, ACF | AR, MA, ARMA |
+| pruebas de hipótesis | ADF, PP, KPSS |
+| colas pesadas, $r^2$ | ARCH, GARCH |
+| condicional / Markov | Markov-Switching |
+
+## Cierre
+
+- Encuesta del módulo
+- Retroalimentación individual
+- Lectura previa: @tsay2010 cap. 2
+
+## Referencias {.smaller}
+
+::: {#refs}
+:::

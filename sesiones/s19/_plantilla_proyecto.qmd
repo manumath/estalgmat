@@ -1,0 +1,50 @@
+---
+title: "TÍTULO DEL PROYECTO"
+subtitle: "Módulo 1 · Proyecto integrador — Equipo: NOMBRES"
+format:
+  html:
+    toc: true
+    code-fold: true
+bibliography: references.bib
+---
+
+## 0. Resumen (máx. 150 palabras)
+
+*Pregunta, datos, método y hallazgo principal.*
+
+```{python}
+#| label: setup
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from scipy import stats
+SEMILLA = 2026                      # fijar siempre la semilla
+rng = np.random.default_rng(SEMILLA)
+# TODO: cargar datos (estalgmat.datos o cargar_yahoo) y construir `R` con retornos log en %
+```
+
+## 1. Datos y EDA
+
+*Fuente, periodo, frecuencia, faltantes, atípicos (método y decisión). ≥ 3 figuras con `#| label: fig-...` y `@fig-...`.*
+
+## 2. Distribución de los retornos
+
+*Normal vs. t (y asimétrica si procede): QQ, JB, AIC, probabilidades de cola, VaR 99 %.*
+
+## 3. Inferencia
+
+*EMV con errores estándar, IC analítico y bootstrap (iid y por bloques), ≥ 2 pruebas de hipótesis, corrección por múltiples pruebas.*
+
+## 4. Matrices
+
+*Σ̂ y condicionamiento, cartera de mínima varianza con incertidumbre, betas por MCO matricial (HC), PCA.*
+
+## 5. Conclusiones y limitaciones
+
+*Qué se aprende, qué no se puede afirmar y por qué.*
+
+## Reproducibilidad
+
+- `uv sync && uv run quarto render` sin errores.
+- Semilla fija y versiones bloqueadas (`uv.lock`).
+
+## Referencias

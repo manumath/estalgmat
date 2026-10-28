@@ -4,7 +4,7 @@ subtitle: "Bloque E · Integración"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 20 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 20 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -45,6 +45,98 @@ Corrección técnica 35 · Interpretación 25 · Reproducibilidad 20 · Comunica
 - Una serie temporal es **una** realización de un proceso $\{X_t\}$; el TCL/LGN clásicos suponen muestras iid → ¿qué cambia con dependencia?
 - Estacionariedad débil: $E[X_t]=\mu$, $\operatorname{Var}(X_t)=\sigma^2$, $\operatorname{Cov}(X_t,X_{t-k})=\gamma_k$ (no depende de $t$).
 - Ejemplos para el Módulo 2: ruido blanco, caminata aleatoria, AR(1) con $\phi\in\{0{,}5;\ 0{,}95;\ 1\}$.
+
+### Demostración ejecutada: de variables aleatorias a procesos estocásticos
+
+```{python}
+#| label: fig-procesos
+#| fig-cap: "Tres procesos con el mismo ruido: ruido blanco, AR(1) con φ = 0,95 y caminata aleatoria (φ = 1)."
+#| fig-height: 5
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from statsmodels.tsa.stattools import acf, adfuller
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+
+def ar1(phi, n, rng):
+    e = rng.standard_normal(n); x = np.zeros(n)
+    for t in range(1, n): x[t] = phi * x[t - 1] + e[t]
+    return x
+
+rng = np.random.default_rng(20)
+n = 500
+procesos = {"ruido blanco (φ=0)": ar1(0.0, n, rng), "AR(1), φ=0,95": ar1(0.95, n, np.random.default_rng(20)),
+            "caminata aleatoria (φ=1)": ar1(1.0, n, np.random.default_rng(20))}
+fig, ax = plt.subplots(3, 2, figsize=(10, 5.4))
+for i, (nom, x) in enumerate(procesos.items()):
+    ax[i, 0].plot(x, lw=.8); ax[i, 0].set_title(nom, fontsize=9)
+    ax[i, 1].bar(range(1, 31), acf(x, nlags=30)[1:], width=.6); ax[i, 1].set_ylim(-.2, 1.05); ax[i, 1].set_title("ACF", fontsize=9)
+fig.tight_layout()
+```
+
+La ACF de la caminata aleatoria **decae muy lentamente**: sus propiedades (media, varianza) dependen del tiempo; no es estacionaria.
+
+### Estacionariedad débil
+
+$$
+E[X_t]=\mu,\qquad\operatorname{Var}(X_t)=\sigma^2,\qquad\operatorname{Cov}(X_t,X_{t-k})=\gamma_k\ \ (\text{no depende de }t).
+$$
+
+Para $X_t=\phi X_{t-1}+\varepsilon_t$ con $|\phi|<1$: $\gamma_k=\sigma^2\phi^k/(1-\phi^2)$, y la ACF es $\rho_k=\phi^k$ (lo vimos como $|\lambda|<1$ de la matriz compañera en S17).
+
+```{python}
+#| label: tbl-adf
+#| tbl-cap: "Prueba de Dickey–Fuller aumentada (H₀: raíz unitaria). Un p-valor pequeño rechaza la raíz unitaria."
+filas = {}
+for nom, x in procesos.items():
+    filas[nom] = {"estadístico ADF": adfuller(x, autolag="AIC", result_object=False)[0], "p-valor": adfuller(x, autolag="AIC", result_object=False)[1]}
+x = procesos["caminata aleatoria (φ=1)"]
+filas["Δ caminata aleatoria"] = {"estadístico ADF": adfuller(np.diff(x), autolag="AIC", result_object=False)[0], "p-valor": adfuller(np.diff(x), autolag="AIC", result_object=False)[1]}
+pd.DataFrame(filas).T.round(4)
+```
+
+La prueba ADF (Módulo 2) tiene una distribución nula **no estándar**. Aquí rechaza la raíz unitaria para el AR(1) con $\phi=0{,}95$ (p ≈ 0,01) y no la rechaza para la caminata aleatoria, como corresponde; pero su potencia cae al reducir $n$ o acercar $\phi$ a 1.
+
+### Precios vs. retornos
+
+```{python}
+#| label: tbl-precios
+#| tbl-cap: "ADF sobre el precio y sobre el retorno de un activo simulado (GARCH-t)."
+from estalgmat import retornos_garch_t, precios_desde_retornos
+r = retornos_garch_t(2000, seed=2026)["ret"]
+p = np.log(precios_desde_retornos(r))
+pd.DataFrame({"estadístico ADF": [adfuller(p, result_object=False)[0], adfuller(r, result_object=False)[0]], "p-valor": [adfuller(p, result_object=False)[1], adfuller(r, result_object=False)[1]]},
+             index=["log-precio", "retorno"]).round(4)
+```
+
+### Advertencia: regresión espuria
+
+Dos caminatas aleatorias **independientes** regresadas una contra otra:
+
+```{python}
+#| label: tbl-espuria
+#| tbl-cap: "500 pares de caminatas aleatorias independientes (n = 250): regresión de una contra la otra."
+import statsmodels.api as sm
+res = []
+for _ in range(500):
+    a, b = np.cumsum(rng.standard_normal(250)), np.cumsum(rng.standard_normal(250))
+    f = sm.OLS(a, sm.add_constant(b)).fit()
+    res.append((f.rsquared, abs(f.tvalues[1])))
+res = np.array(res)
+pd.Series({"R² medio": res[:, 0].mean(), "% con |t| > 2 (nominal 5 %)": 100 * np.mean(res[:, 1] > 2)}, name="valor").round(2).to_frame()
+```
+
+El estadístico t **ya no tiene** su distribución habitual con variables no estacionarias: se "descubren" relaciones inexistentes en una gran parte de los casos. Es el motivo de estudiar estacionariedad (Módulo 2) y cointegración (Módulo 5).
+
+### Hoja de ruta hacia el Módulo 2
+
+| Concepto de este módulo | Lo que sigue |
+|---|---|
+| Independencia → dependencia | ACF/PACF, procesos AR, MA, ARMA |
+| TCL con datos iid | Estacionariedad y ergodicidad |
+| MV y bootstrap | Estimación de ARMA/GARCH; bootstrap por bloques |
+| Pruebas de hipótesis | ADF, PP, KPSS; Ljung–Box |
+| Colas pesadas y $r^2$ autocorrelado | ARCH, GARCH, EGARCH, TARCH |
+| Probabilidad condicional / Markov | Markov-Switching |
 
 ## Laboratorio (Marimo)
 
