@@ -1,0 +1,71 @@
+---
+title: "S13 · Pruebas no paramétricas y de bondad de ajuste"
+subtitle: "Bloque C · Inferencia estadística"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 13 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Aplicar pruebas de signos, Wilcoxon, Mann–Whitney y Kruskal–Wallis.
+- Contrastar normalidad y ajuste distribucional (Kolmogorov–Smirnov, Anderson–Darling, Jarque–Bera, Shapiro–Wilk).
+- Implementar pruebas de permutación.
+- Controlar pruebas múltiples (Bonferroni, Holm, Benjamini–Hochberg) y reconocer el *data snooping*.
+
+## Pregunta motivadora
+
+> Probamos 20 efectos de calendario (día de la semana, mes…). Si uno sale significativo al 5 %, ¿hemos descubierto algo?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Simulación en vivo: 20 pruebas sobre ruido puro; ¿cuántas “significativas” aparecen? |
+| 10–20 | **Exposición** | Pruebas basadas en rangos: signos, Wilcoxon, Mann–Whitney, Kruskal–Wallis. |
+| 20–30 | **Exposición** | Bondad de ajuste: KS, Anderson–Darling, Shapiro–Wilk, Jarque–Bera; limitaciones con parámetros estimados. |
+| 30–45 | **Exposición** | Permutación y bootstrap de hipótesis; pruebas múltiples: FWER vs. FDR; sesgos por minería de datos. |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | Normalidad de 5 activos con JB, SW y KS; QQ-plots. |
+| 60–80 | **Laboratorio** | Efecto día-de-la-semana: Kruskal–Wallis y permutación; corrección de Holm y BH; tabla final ajustada. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+$$
+\text{JB}=\frac{n}{6}\Bigl(\hat\gamma_1^2+\tfrac14(\hat\kappa-3)^2\Bigr)\ \overset{a}{\sim}\ \chi^2_2\ \text{ bajo normalidad.}
+$$
+
+**Mann–Whitney:** $U=\sum_{i,j}\mathbf 1\{x_i>y_j\}$ mide $P(X>Y)$; sin supuesto de normalidad.
+
+**Permutación:** bajo $H_0$ las etiquetas son intercambiables → distribución nula exacta por remuestreo sin reemplazo.
+
+**Múltiples pruebas:** Bonferroni $\alpha/m$; Holm (secuencial); BH controla la tasa de falsos descubrimientos (FDR).
+
+## Laboratorio (Marimo)
+
+Notebook “detector de falsos descubrimientos”: genera 100 señales de trading aleatorias y muestra cuántas pasan sin y con corrección.
+
+## Tarea
+
+Evaluar si los retornos de un activo difieren antes y después de un evento usando Mann–Whitney y permutación; comparar con la prueba t.
+
+## Lecturas
+
+- @casella2002, sec. 8.3 y cap. 10 (idea).
+- @hogg2019, cap. 10.
+
+## Conexión con la especialización
+
+Pruebas de eventos no paramétricas y tests de la EMH (rachas, varianza) se apoyan en estas técnicas.
+
+---
+
+[← S12](../s12/index.qmd) · [Todas las sesiones](../index.qmd) · [S14 →](../s14/index.qmd)

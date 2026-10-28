@@ -1,0 +1,148 @@
+---
+title: "S04 · Visualización y EDA de series financieras y macro"
+subtitle: "Bloque A · Entorno, Python y EDA"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 4 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Aplicar un protocolo de EDA para series de tiempo y documentarlo en un informe Quarto.
+- Identificar tendencia, estacionalidad, atípicos y cambios de volatilidad.
+- Calcular e interpretar la ACF/PACF muestral de $r_t$ y $r_t^2$ (primera mirada).
+- Elegir el gráfico adecuado (líneas, histograma+KDE, QQ, boxplot estacional, mapa de calor de correlaciones).
+
+## Pregunta motivadora
+
+> ¿Por qué el gráfico de precios “parece” tendencial y el de retornos “parece” ruido… pero los retornos al cuadrado no lo son?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Mostrar tres gráficos del mismo activo (precio, retorno, retorno²) y recoger hipótesis. |
+| 10–20 | **Exposición** | Protocolo EDA: estructura → calidad → univariado → temporal → bivariado → hallazgos y *siguientes pasos*. |
+| 20–35 | **Exposición** | Herramientas: descomposición STL, detección de atípicos (z robusto con MAD, IQR, Hampel), boxplot estacional, ACF/PACF. |
+| 35–45 | **Exposición** | Buenas prácticas de visualización; informe EDA reproducible en Quarto (parámetros, `echo: false`, referencias cruzadas). |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | EDA de `serie_macro()`: STL, atípicos, boxplot por mes. |
+| 60–80 | **Laboratorio** | EDA de `retornos_garch_t()`: histograma vs. normal, QQ, ACF de $r$ y $r^2$, volatilidad móvil; esqueleto de informe `eda.qmd`. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+### Atípicos con z-score robusto
+
+$$
+z_t^{\text{rob}}=0{,}6745\,\frac{x_t-\operatorname{med}(x)}{\operatorname{MAD}(x)},\qquad
+\operatorname{MAD}(x)=\operatorname{med}\bigl(|x_t-\operatorname{med}(x)|\bigr);
+\quad \text{atípico si } |z^{\text{rob}}|>3{,}5.
+$$
+
+### Autocorrelación muestral
+
+$$
+\hat\rho_k=\frac{\sum_{t=k+1}^{T}(x_t-\bar x)(x_{t-k}-\bar x)}{\sum_{t=1}^{T}(x_t-\bar x)^2},\qquad
+\text{bandas aprox. } \pm 1{,}96/\sqrt T \text{ bajo ruido blanco.}
+$$
+
+### Hallazgos típicos que se deben buscar
+
+1. Precios no estacionarios, retornos aproximadamente no autocorrelacionados.
+2. $r_t^2$ y $|r_t|$ **sí** autocorrelacionados (agrupamiento de volatilidad).
+3. Colas más pesadas que la normal (se profundiza en S9).
+
+### Demostración ejecutada: EDA de una serie macro
+
+```{python}
+#| label: fig-stl
+#| fig-cap: "Descomposición STL de la serie mensual: tendencia, estacionalidad y residuo."
+#| fig-height: 6
+import numpy as np, pandas as pd, matplotlib.pyplot as plt
+from scipy import stats
+from statsmodels.tsa.seasonal import STL
+from statsmodels.tsa.stattools import acf
+from estalgmat import serie_macro, retornos_garch_t
+
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+y = serie_macro()
+stl = STL(y, period=12, robust=True).fit()
+fig = stl.plot(); fig.set_size_inches(8, 6); fig.tight_layout()
+```
+
+```{python}
+#| label: tbl-atipicos
+#| tbl-cap: "Atípicos del residuo STL (z robusto con MAD, umbral 3,5)."
+def z_robusto(x):
+    x = np.asarray(x); mad = np.median(np.abs(x - np.median(x)))
+    return 0.6745 * (x - np.median(x)) / mad
+
+z = pd.Series(z_robusto(stl.resid), index=y.index)
+atip = pd.DataFrame({"valor": y[z.abs() > 3.5], "z robusto": z[z.abs() > 3.5]})
+atip.round(2)
+```
+
+### Boxplot estacional
+
+```{python}
+#| label: fig-estacional
+#| fig-cap: "Residuo STL por mes: sin estacionalidad remanente, las cajas se centran en cero."
+#| fig-height: 3.2
+plt.figure(figsize=(8, 3.2))
+plt.boxplot([stl.resid[stl.resid.index.month == m] for m in range(1, 13)], tick_labels=range(1, 13))
+plt.xlabel("mes"); plt.ylabel("residuo STL")
+```
+
+### EDA de retornos: lo que el precio esconde
+
+```{python}
+#| label: fig-eda-ret
+#| fig-cap: "ACF de r y r² y volatilidad móvil de 63 días."
+#| fig-height: 3.4
+r = retornos_garch_t(3000, seed=2026)["ret"]
+nl = 25
+fig, ax = plt.subplots(1, 3, figsize=(11, 3.4))
+for a, x, t in zip(ax[:2], (r, r**2), ("r", "r²")):
+    a.bar(range(1, nl + 1), acf(x, nlags=nl)[1:], width=.6)
+    a.axhline(1.96/np.sqrt(len(x)), ls="--", c="r", lw=.8); a.axhline(-1.96/np.sqrt(len(x)), ls="--", c="r", lw=.8)
+    a.set_title(f"ACF de {t}")
+ax[2].plot(r.rolling(63).std(), lw=.9); ax[2].set_title("Volatilidad móvil (63 d)")
+fig.tight_layout()
+```
+
+### Checklist del informe EDA
+
+1. Estructura: periodo, frecuencia, faltantes, duplicados.
+2. Univariado: histograma + QQ, asimetría y curtosis.
+3. Temporal: tendencia/estacionalidad (STL), ACF/PACF.
+4. Atípicos: método, decisión (conservar/winsorizar/modelar) y justificación.
+5. Hallazgos y **siguientes pasos de modelización**.
+
+## Laboratorio (Marimo)
+
+El cuaderno produce las figuras y el esqueleto del informe EDA que se reutiliza en el proyecto integrador.
+
+## Tarea
+
+Informe EDA en Quarto (HTML) de un activo y una serie macro de elección propia, con al menos 6 figuras numeradas y una sección de hallazgos.
+
+## Lecturas
+
+- @tsay2010, cap. 1 (hechos estilizados de rendimientos).
+- @cont2001, secciones 1–4.
+
+## Conexión con la especialización
+
+La ACF/PACF es la herramienta de identificación de ARMA (Módulo 2); la ACF de $r^2$ motiva ARCH/GARCH.
+
+---
+
+[← S03](../s03/index.qmd) · [Todas las sesiones](../index.qmd) · [S05 →](../s05/index.qmd)

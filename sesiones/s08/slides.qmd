@@ -1,0 +1,75 @@
+---
+title: "Distribuciones t de Student, χ² y F"
+subtitle: "Módulo 1 · Sesión 08"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S08"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+¿Por qué con muestras pequeñas usamos cuantiles $t$ y no normales?
+
+## Construcción
+
+$$
+\chi^2_k=\sum_{i=1}^kZ_i^2,\qquad
+t_\nu=\frac Z{\sqrt{\chi^2_\nu/\nu}},\qquad
+F_{a,b}=\frac{\chi^2_a/a}{\chi^2_b/b}
+$$
+
+## Verificación por simulación
+
+```{python}
+#| output-location: slide
+import numpy as np, matplotlib.pyplot as plt
+from scipy import stats
+rng = np.random.default_rng(2); R, k = 100_000, 5
+chi = (rng.standard_normal((R, k))**2).sum(1)
+t = rng.standard_normal(R) / np.sqrt((rng.standard_normal((R, k))**2).sum(1) / k)
+fig, ax = plt.subplots(1, 2, figsize=(9, 3.5))
+for a, x, d, rg, ti in ((ax[0], chi, stats.chi2(k), (0, 25), "χ²(5)"), (ax[1], t, stats.t(k), (-6, 6), "t(5)")):
+    a.hist(x, bins=80, range=rg, density=True, alpha=.5); g = np.linspace(*rg, 300); a.plot(g, d.pdf(g), "k"); a.set_title(ti)
+fig.tight_layout()
+```
+
+## Muestras normales
+
+$$\frac{(n-1)S^2}{\sigma^2}\sim\chi^2_{n-1},\qquad \frac{\bar X-\mu}{S/\sqrt n}\sim t_{n-1},\qquad \bar X\perp S^2$$
+
+## Grados de libertad y colas
+
+```{python}
+#| output: asis
+import pandas as pd
+nus = [2, 3, 5, 10, 30, 100]
+print(pd.DataFrame({"ν": nus, "t 97,5 %": [stats.t.ppf(.975, v) for v in nus],
+              "P(|T|>3)": [2 * stats.t.sf(3, v) for v in nus]}).round(4).to_markdown(index=False))
+```
+
+Normal: 1,96 y 0,0027.
+
+## Momentos de la $t_\nu$
+
+- $\operatorname{Var}=\nu/(\nu-2)$, si $\nu>2$
+- Curtosis en exceso $=6/(\nu-4)$, si $\nu>4$
+- $t$ = mezcla de escala de normales
+
+## ¿Dónde aparecen?
+
+| Estadístico | Distribución nula |
+|---|---|
+| Ljung–Box $Q(m)$ | $\chi^2_m$ |
+| Jarque–Bera | $\chi^2_2$ |
+| F de regresión | $F_{q,n-k}$ |
+| ADF | Dickey–Fuller |
+
+## Tarea
+
+$P(|T|>3)$ para $\nu\in\{3,5,10,30,\infty\}$ y lectura en términos de riesgo de cola.

@@ -1,0 +1,77 @@
+---
+title: "S19 · Taller integrador: análisis de una cartera"
+subtitle: "Bloque E · Integración"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 19 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Integrar Python, EDA, distribuciones, inferencia y álgebra matricial en un único flujo reproducible.
+- Estimar la matriz de covarianzas, la cartera de mínima varianza y sus incertidumbres.
+- Comunicar resultados en un informe Quarto con criterios técnicos y económicos.
+- Recibir y dar retroalimentación entre pares.
+
+## Pregunta motivadora
+
+> Con 5 activos y 10 años de datos: ¿qué cartera de mínima varianza obtengo y qué tan confiable es?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Presentación del taller, equipos (2–3), repositorio base y checklist del informe. |
+| 10–35 | **Sprint 1 · Datos y distribución** | EDA, ajuste normal vs. $t$, QQ y diagnóstico de colas (S4–S9). |
+| 35–45 | **Revisión cruzada** | Cada equipo explica su hallazgo central a otro equipo. |
+| 45–50 | **Pausa activa** | — |
+| 50–70 | **Sprint 2 · Inferencia** | IC bootstrap, 2 pruebas de hipótesis, corrección por múltiples pruebas (S10–S13). |
+| 70–85 | **Sprint 3 · Matrices** | $\hat\Sigma$, cartera de mínima varianza $w=\Sigma^{-1}\mathbf 1/(\mathbf 1'\Sigma^{-1}\mathbf 1)$, beta MCO, PCA (S14–S18). |
+| 85–90 | **Cierre** | Pendientes, hoja de ruta hacia la entrega (S20). |
+
+:::
+
+## Contenidos
+
+### Flujo del proyecto
+
+1. Datos: `uv run python panel.py` genera `data/panel.parquet` (simulado o real).
+2. EDA y distribución → hechos estilizados y justificación del modelo de colas.
+3. Inferencia → estimadores con IC (analítico y bootstrap) y contrastes.
+4. Matrices → $\hat\Sigma$, $w^{\star}$, beta, PCA.
+5. Reporte → `proyecto.qmd` con `uv run quarto render`.
+
+### Cartera de mínima varianza
+
+$$
+\min_w\ w'\Sigma w\ \text{ s.a. } \mathbf 1'w=1\ \Longrightarrow\
+w^{\star}=\frac{\Sigma^{-1}\mathbf 1}{\mathbf 1'\Sigma^{-1}\mathbf 1}.
+$$
+
+Discusión de la **incertidumbre** de $\hat w^{\star}$ (bootstrap) y del mal condicionamiento cuando $n/p$ es pequeño.
+
+## Laboratorio (Marimo)
+
+Plantilla de proyecto con secciones, pruebas de humo y semilla fija. Los equipos trabajan en parejas sobre el repositorio.
+
+## Tarea
+
+Completar el informe y preparar la presentación de 8 min + 2 min de preguntas.
+
+## Lecturas
+
+- Repasar notas de S4–S18.
+- @mcneil2015, cap. 2.
+
+## Conexión con la especialización
+
+El flujo (datos → EDA → modelo → inferencia → reporte) es el que se repetirá en cada módulo de la especialización.
+
+---
+
+[← S18](../s18/index.qmd) · [Todas las sesiones](../index.qmd) · [S20 →](../s20/index.qmd)

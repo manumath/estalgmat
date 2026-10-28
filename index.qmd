@@ -1,0 +1,38 @@
+---
+title: "Módulo 1 · Revisión de Estadística y Álgebra Matricial"
+subtitle: "Especialización Superior en Econometría de Series de Tiempo y Ciencia de Datos"
+toc: false
+---
+
+Bienvenido/a al sitio del **Módulo 1**. Este módulo nivela las bases probabilísticas, inferenciales y de álgebra lineal que se usarán en el resto de la especialización (modelos ARMA, GARCH, VAR/SVAR, cointegración, panel y econometría bayesiana), y establece el **entorno computacional reproducible** que se usará durante todo el programa.
+
+::: {.callout-note appearance="simple"}
+**20 sesiones · 1 h 30 min cada una · 30 horas** — Python, Marimo, Quarto y uv, trabajando desde Positron.
+:::
+
+## Cómo está organizado
+
+| Bloque | Sesiones | Tema |
+|---|---|---|
+| **A** | 1–4 | Entorno de trabajo, Python científico y análisis exploratorio (EDA) de series |
+| **B** | 5–9 | Probabilidad, distribuciones comunes en finanzas, colas pesadas y asimetría |
+| **C** | 10–13 | Inferencia: estimación puntual y por intervalos, pruebas de hipótesis |
+| **D** | 14–18 | Álgebra matricial: matrices, rango, MCO matricial, autovalores, SVD/PCA |
+| **E** | 19–20 | Taller integrador y evaluación final |
+
+Cada sesión tiene tres materiales: la **página de contenidos**, la **presentación** (Reveal.js) y el **laboratorio** (cuaderno Marimo).
+
+::: {.grid}
+::: {.g-col-12 .g-col-md-4}
+### 📋 [Programa](programa.qmd)
+Objetivos, resultados de aprendizaje y cronograma de las 20 sesiones.
+:::
+::: {.g-col-12 .g-col-md-4}
+### 🧪 [Sesiones](sesiones/index.qmd)
+Contenidos desarrollados, diapositivas y laboratorios.
+:::
+::: {.g-col-12 .g-col-md-4}
+### 🛠️ [Entorno](entorno.qmd)
+Instalación de Positron, uv, Quarto y Marimo.
+:::
+:::

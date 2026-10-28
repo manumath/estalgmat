@@ -1,0 +1,35 @@
+---
+title: "Evaluación"
+---
+
+Propuesta de ponderación (ajustable según el reglamento de la especialización).
+
+| Componente | Peso | Cuándo | Descripción |
+|---|--:|---|---|
+| Laboratorios y tareas semanales | 30 % | Cada sesión | Cuaderno Marimo/Jupyter entregado vía Git; se evalúa corrección, claridad y reproducibilidad (`uv run` desde cero). |
+| Control 1: Python, EDA y probabilidad | 15 % | Sesión 10 (primeros 20 min) | Preguntas conceptuales + ejercicios cortos de simulación. |
+| Control 2: Inferencia y álgebra matricial | 15 % | Sesión 18 (primeros 20 min) | Derivaciones breves y verificación numérica. |
+| Proyecto integrador | 40 % | Sesiones 19–20 | Informe Quarto (HTML o PDF) + presentación de 10 min, ver abajo. |
+
+## Proyecto integrador
+
+Cada equipo (2–3 personas) elige una cartera de 3–5 activos o una familia de variables macro y entrega un **informe Quarto reproducible** que incluya:
+
+1. EDA y hechos estilizados (S4, S9).
+2. Ajuste de una distribución a los retornos y diagnóstico de colas (S7–S9).
+3. Estimación por MV con intervalos (analíticos y bootstrap) y al menos dos pruebas de hipótesis (S10–S13).
+4. Matriz de covarianzas, cartera de mínima varianza, beta por MCO matricial y PCA de los retornos (S14–S18).
+5. Conclusiones y limitaciones.
+
+### Rúbrica (100 pts)
+
+| Criterio | Pts |
+|---|--:|
+| Corrección técnica (estimación, inferencia, matrices) | 35 |
+| Interpretación económica y análisis de supuestos | 25 |
+| Reproducibilidad (`uv.lock`, semillas, `quarto render` sin errores) | 20 |
+| Comunicación (gráficos, redacción, presentación) | 20 |
+
+## Política de reproducibilidad
+
+Una entrega solo se considera válida si, tras clonar el repositorio y ejecutar `uv sync && uv run quarto render`, se obtiene el mismo informe.

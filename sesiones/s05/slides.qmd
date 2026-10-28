@@ -1,0 +1,90 @@
+---
+title: "Teoría de conjuntos y fundamentos de probabilidad"
+subtitle: "Módulo 1 · Sesión 05"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S05"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+Una alerta de default acierta el **90 %** de las veces, pero solo el **2 %** de las empresas quiebran.
+
+. . .
+
+Si suena la alerta, ¿cuál es la probabilidad real de default?
+
+## Conjuntos
+
+- $A\cup B$, $A\cap B$, $A^c$, $A\setminus B$
+- Partición: $\Omega=\bigsqcup_i A_i$
+- **De Morgan:** $(A\cup B)^c=A^c\cap B^c$, $(A\cap B)^c=A^c\cup B^c$
+
+```{python}
+A, B, om = {1, 2, 3, 4}, {3, 4, 5}, set(range(1, 7))
+om - (A | B) == (om - A) & (om - B)
+```
+
+## Probabilidad (Kolmogorov)
+
+::: {.incremental}
+1. $P(A)\ge0$
+2. $P(\Omega)=1$
+3. $A_i$ disjuntos ⇒ $P(\bigcup A_i)=\sum P(A_i)$
+:::
+
+. . .
+
+Consecuencias: $P(A^c)=1-P(A)$; $P(A\cup B)=P(A)+P(B)-P(A\cap B)$
+
+## Condicional e independencia
+
+$$P(A\mid B)=\frac{P(A\cap B)}{P(B)},\qquad A\perp B\iff P(A\cap B)=P(A)P(B)$$
+
+**Total:** $P(B)=\sum_iP(B\mid A_i)P(A_i)$
+
+## Bayes
+
+$$P(A_i\mid B)=\frac{P(B\mid A_i)\,P(A_i)}{\sum_jP(B\mid A_j)\,P(A_j)}$$
+
+. . .
+
+$$P(\text{default}\mid\text{alerta})=\frac{0{,}9\cdot0{,}02}{0{,}9\cdot0{,}02+0{,}1\cdot0{,}98}\approx 0{,}155$$
+
+::: {.callout-important}
+**Tasa base**: ignorarla es el error más común al evaluar clasificadores.
+:::
+
+## Verificación por simulación
+
+```{python}
+import numpy as np
+rng = np.random.default_rng(1); N = 1_000_000
+d = rng.random(N) < 0.02
+alerta = np.where(d, rng.random(N) < 0.90, rng.random(N) < 0.10)
+round(float(d[alerta].mean()), 4)
+```
+
+## Con datos: eventos como máscaras
+
+```{python}
+import pandas as pd
+from estalgmat import retornos_garch_t
+df = retornos_garch_t(20000, seed=5)
+A = df["ret"] < -2; B = df["sigma"] > df["sigma"].median()
+pd.Series({"P(A)": A.mean(), "P(A|B)": (A & B).sum() / B.sum(),
+           "P(A|no B)": (A & ~B).sum() / (~B).sum()}).round(4).to_dict()
+```
+
+Las caídas fuertes **dependen del régimen** de volatilidad.
+
+## Laboratorio y tarea
+
+- Lab: conjuntos, Bayes por simulación, condicionales por régimen
+- Tarea: problemas 1–6 + simulación de cartera con dos segmentos

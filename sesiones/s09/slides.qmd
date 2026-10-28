@@ -1,0 +1,172 @@
+---
+title: "Colas pesadas y asimetría en datos financieros"
+subtitle: "Módulo 1 · Sesión 9"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S09"
+    preview-links: auto
+execute:
+  echo: false
+---
+
+```{python}
+#| include: false
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from scipy import stats
+from statsmodels.tsa.stattools import acf
+from estalgmat import retornos_garch_t
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+df = retornos_garch_t(n=5000, seed=2026)
+r = df["ret"]
+mu, sd = stats.norm.fit(r)
+nu, loc, sc = stats.t.fit(r)
+```
+
+## Pregunta motivadora
+
+Bajo normalidad, una caída de **5 desviaciones estándar** ocurre una vez cada ~**14 000 años** de datos diarios.
+
+. . .
+
+¿Cuántas veces la vemos en la realidad?
+
+## Hechos estilizados [@cont2001]
+
+::: {.incremental}
+1. Retornos **sin autocorrelación** lineal
+2. **Colas pesadas**
+3. **Asimetría** (negativa en índices)
+4. **Agrupamiento de volatilidad**
+5. **Efecto apalancamiento**
+6. **Gaussianidad agregada**
+:::
+
+## Medidas de forma
+
+$$
+\hat\gamma_1=\frac{\tfrac1n\sum(r_t-\bar r)^3}{s^3},\qquad
+\hat\kappa=\frac{\tfrac1n\sum(r_t-\bar r)^4}{s^4}
+$$
+
+- Normal: $\gamma_1=0$, $\kappa=3$ (exceso $=0$)
+- $t_\nu$: exceso $=6/(\nu-4)$ si $\nu>4$
+
+. . .
+
+$$
+\mathrm{JB}=\frac n6\Bigl(\hat\gamma_1^2+\tfrac14(\hat\kappa-3)^2\Bigr)\overset{a}{\sim}\chi^2_2
+$$
+
+## Los datos
+
+```{python}
+#| fig-height: 3.6
+fig, ax = plt.subplots(figsize=(9, 3.6))
+ax.plot(r, lw=.5); ax.set_ylabel("retorno (%)")
+fig.tight_layout()
+```
+
+```{python}
+#| output: asis
+jb, p = stats.jarque_bera(r)
+print(pd.DataFrame({"asimetría": [stats.skew(r)], "curtosis exceso": [stats.kurtosis(r)],
+                    "JB": [jb], "p-valor": [p]}).round(3).to_markdown(index=False, floatfmt=".3g"))
+```
+
+## Normal vs. t: densidades
+
+```{python}
+#| fig-height: 4.2
+x = np.linspace(r.min(), r.max(), 600)
+fig, ax = plt.subplots(1, 2, figsize=(10, 4.2))
+ax[0].hist(r, bins=80, density=True, alpha=.45)
+ax[0].plot(x, stats.norm.pdf(x, mu, sd), label="normal")
+ax[0].plot(x, stats.t.pdf(x, nu, loc, sc), label=f"t (ν̂={nu:.1f})")
+ax[0].set_yscale("log"); ax[0].set_ylim(1e-5, 2); ax[0].legend(); ax[0].set_title("Escala log")
+stats.probplot(r, dist="norm", plot=ax[1]); ax[1].set_title("QQ-plot vs normal")
+fig.tight_layout()
+```
+
+## ¿Cuánto subestima la normal?
+
+```{python}
+#| output: asis
+z = (r - r.mean()) / r.std()
+filas = []
+for k in [2, 3, 4, 5]:
+    pn = stats.norm.cdf(-k)
+    pt = stats.t.cdf(r.mean() - k * r.std(), nu, loc=loc, scale=sc)
+    filas.append({"k (σ)": k, "empírica": (z < -k).mean(), "normal": pn, "t ajustada": pt})
+print(pd.DataFrame(filas).to_markdown(index=False, floatfmt=".3g"))
+```
+
+. . .
+
+La normal **subestima** sistemáticamente la probabilidad de eventos extremos.
+
+## Índice de cola (Hill)
+
+$$
+\hat\alpha^{-1}=\frac1m\sum_{i=1}^m\ln\frac{L_{(i)}}{L_{(m+1)}},\qquad P(L>x)\sim x^{-\alpha}
+$$
+
+Solo existen los momentos de orden $<\alpha$.
+
+::: {.callout-note}
+Con $\alpha\le 4$ la curtosis muestral ni siquiera converge: es una medida **inestable**.
+:::
+
+## VaR al 99 %
+
+```{python}
+#| output: asis
+alpha = 0.01
+tab = pd.DataFrame({"VaR 99 %": [-stats.norm.ppf(alpha, mu, sd),
+                                 -stats.t.ppf(alpha, nu, loc, sc),
+                                 -np.quantile(r, alpha)]},
+                   index=["normal", "t ajustada", "empírico"])
+tab["excedencias"] = [(r < -v).mean() for v in tab["VaR 99 %"]]
+print(tab.round(4).to_markdown())
+```
+
+## Agrupamiento de volatilidad
+
+```{python}
+#| fig-height: 3.4
+nl = 30
+fig, ax = plt.subplots(1, 2, figsize=(10, 3.4), sharey=True)
+for a, x_, t in zip(ax, (r, r**2), ("r", "r²")):
+    a.bar(range(1, nl + 1), acf(x_, nlags=nl)[1:], width=.6)
+    for s in (1, -1):
+        a.axhline(s * 1.96 / np.sqrt(len(x_)), ls="--", c="r", lw=.8)
+    a.set_title(f"ACF de {t}")
+fig.tight_layout()
+```
+
+*Incorrelacionados* ≠ *independientes*.
+
+## Síntesis
+
+::: {.incremental}
+- La normal incondicional es mala para retornos diarios
+- Una $t$ con pocos g.l. es un primer modelo razonable
+- Subestimar colas ⇒ subestimar VaR y capital
+- Siguiente paso: **modelar la dinámica** de la volatilidad (GARCH-$t$, EGARCH, TARCH)
+:::
+
+## Laboratorio
+
+`uv run marimo edit sesiones/s09/lab.py`
+
+1. Mueve el slider de $\nu$: ¿cuándo se vuelve indistinguible de la normal?
+2. ¿Cómo cambia el JB con $n$?
+3. Compara el VaR 99 % con $\nu=3,5,30$.
+
+## Referencias {.smaller}
+
+::: {#refs}
+:::

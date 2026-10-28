@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+/_site/
+/.quarto/
+/_freeze/
+*_files/
+.ipynb_checkpoints/
+data/cache/
+sesiones/*/lab.html
+.positron/
+.DS_Store
+
+**/*.quarto_ipynb
+__marimo__/

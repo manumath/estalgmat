@@ -1,0 +1,224 @@
+---
+title: "S09 · Colas pesadas y asimetría en datos financieros"
+subtitle: "Bloque B · Probabilidad y distribuciones"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 9 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Resumir los hechos estilizados de los rendimientos financieros.
+- Diagnosticar no normalidad con curtosis, asimetría, QQ-plot y Jarque–Bera.
+- Comparar el ajuste normal vs. $t$ de Student y cuantificar el error en probabilidades de cola.
+- Estimar el índice de cola (Hill) y calcular el VaR bajo distintos supuestos.
+- Relacionar colas pesadas con agrupamiento de volatilidad (ACF de $r^2$).
+
+## Pregunta motivadora
+
+> Bajo normalidad, una caída de 5 desviaciones estándar ocurre una vez cada ~14 000 años de datos diarios. ¿Cuántas veces la vemos en la realidad?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Mostrar las mayores caídas diarias de un índice bursátil real y calcular cuántas sigmas son. |
+| 10–20 | **Exposición** | Hechos estilizados (Cont, 2001): colas pesadas, asimetría, agrupamiento, efecto apalancamiento. |
+| 20–35 | **Exposición** | Herramientas de diagnóstico: curtosis, QQ, JB; ajuste $t$ y $t$ asimétrica; Hill y probabilidades de cola. |
+| 35–45 | **Exposición** | Implicaciones: VaR y ES con normal vs. $t$; qué viene en el Módulo 2 (GARCH-$t$, EGARCH, TARCH). |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | Diagnóstico completo de `retornos_garch_t()`: curtosis, JB, QQ, histograma en escala logarítmica. |
+| 60–80 | **Laboratorio** | Ajuste normal vs. $t$, probabilidades de cola, VaR 99 % y exceedances; slider de $\nu$; ACF de $r$ y $r^2$. |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+```{python}
+#| label: setup
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from scipy import stats
+from statsmodels.tsa.stattools import acf
+from estalgmat import retornos_garch_t
+
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+
+df = retornos_garch_t(n=5000, seed=2026)                     # simétrico
+dfa = retornos_garch_t(n=5000, alpha=0.03, gamma=0.10, seed=2026)  # con apalancamiento (GJR)
+r, ra = df["ret"], dfa["ret"]
+```
+
+### Hechos estilizados (Cont, 2001) {#sec-hechos}
+
+1. **Ausencia de autocorrelación lineal** en los retornos.
+2. **Colas pesadas**: la curtosis excede a la de la normal.
+3. **Asimetría** (en índices bursátiles, negativa): las caídas fuertes son más probables que las alzas fuertes.
+4. **Agrupamiento de volatilidad**: $|r_t|$ y $r_t^2$ muestran autocorrelación positiva y persistente.
+5. **Efecto apalancamiento**: la volatilidad aumenta más tras caídas que tras alzas.
+6. **Gaussianidad agregada**: al aumentar el horizonte, la distribución se acerca a la normal.
+
+@cont2001 documenta estos hechos en una gran variedad de mercados y periodos.
+
+### Diagnóstico de no normalidad
+
+$$
+\hat\gamma_1=\frac{\tfrac1n\sum(r_t-\bar r)^3}{s^3},\qquad
+\hat\kappa=\frac{\tfrac1n\sum(r_t-\bar r)^4}{s^4},\qquad
+\mathrm{JB}=\frac n6\Bigl(\hat\gamma_1^2+\tfrac14(\hat\kappa-3)^2\Bigr)\overset{a}{\sim}\chi^2_2.
+$$
+
+```{python}
+#| label: tbl-diag
+#| tbl-cap: "Diagnóstico de normalidad. Un p-valor de JB cercano a 0 rechaza la normalidad."
+def diag(x):
+    jb, p = stats.jarque_bera(x)
+    return pd.Series({"n": len(x), "media": x.mean(), "desv. est.": x.std(),
+                      "asimetría": stats.skew(x), "curtosis exceso": stats.kurtosis(x),
+                      "JB": jb, "p-valor JB": p})
+pd.DataFrame({"GARCH-t simétrico": diag(r), "GJR-GARCH-t (apalancamiento)": diag(ra)}).round(4)
+```
+
+::: {.callout-note}
+## Cuidado con la asimetría y la curtosis muestrales
+Con colas tan pesadas, $\hat\gamma_1$ y $\hat\kappa$ son **muy variables** entre muestras: incluso la serie simétrica puede mostrar una asimetría muestral claramente distinta de cero, y los errores estándar $\sqrt{6/n}$ y $\sqrt{24/n}$ solo valen bajo normalidad. Por eso conviene complementar con el QQ-plot, cuantiles empíricos y el índice de cola.
+:::
+
+### Gráficos: histograma y QQ-plot
+
+```{python}
+#| label: fig-hist-qq
+#| fig-cap: "Izquierda: histograma de los retornos con densidades normal y t ajustadas (escala log en y). Derecha: QQ-plot contra la normal."
+#| fig-height: 4
+mu, sd = stats.norm.fit(r)
+nu, loc, sc = stats.t.fit(r)
+x = np.linspace(r.min(), r.max(), 600)
+
+fig, ax = plt.subplots(1, 2, figsize=(9, 4))
+ax[0].hist(r, bins=80, density=True, alpha=.45, label="datos")
+ax[0].plot(x, stats.norm.pdf(x, mu, sd), label="normal")
+ax[0].plot(x, stats.t.pdf(x, nu, loc, sc), label=f"t (ν̂={nu:.1f})")
+ax[0].set_yscale("log"); ax[0].set_ylim(1e-5, 2); ax[0].legend(); ax[0].set_xlabel("retorno (%)")
+stats.probplot(r, dist="norm", plot=ax[1]); ax[1].set_title("")
+fig.tight_layout()
+```
+
+En la escala logarítmica la normal “cae” demasiado rápido en las colas; la $t$ las captura. En el QQ-plot, los puntos se separan de la recta en ambos extremos (forma de “S”).
+
+### ¿Cuánto subestima la normal el riesgo de cola?
+
+Probabilidad de que el retorno caiga más de $k$ desviaciones estándar por debajo de la media, y cada cuántos días hábiles ocurriría:
+
+```{python}
+#| label: tbl-colas
+#| tbl-cap: "P(r < μ − kσ): empírica, normal ajustada y t ajustada."
+ks = [2, 3, 4, 5]
+z = (r - r.mean()) / r.std()
+filas = []
+for k in ks:
+    emp = (z < -k).mean()
+    pn = stats.norm.cdf(-k)
+    pt = stats.t.cdf(r.mean() - k * r.std(), nu, loc=loc, scale=sc)   # mismo umbral μ − kσ
+    filas.append({"k": k, "empírica": emp, "normal": pn, "t ajustada": pt,
+                  "días entre eventos (normal)": 1 / pn})
+pd.DataFrame(filas).set_index("k").round(6)
+```
+
+### Índice de cola: estimador de Hill
+
+Con pérdidas $L_t=-r_t$ y los $m$ mayores valores $L_{(1)}\ge\dots\ge L_{(m)}$,
+
+$$
+\hat\alpha_{\text{Hill}}^{-1}=\frac1m\sum_{i=1}^{m}\ln\frac{L_{(i)}}{L_{(m+1)}}.
+$$
+
+Una cola tipo potencia $P(L>x)\sim x^{-\alpha}$ implica que existen solo los momentos de orden $<\alpha$.
+
+```{python}
+#| label: fig-hill
+#| fig-cap: "Gráfico de Hill: estimación de α en función del número de observaciones extremas m."
+#| fig-height: 3.2
+def hill(x, m_max=400):
+    L = np.sort(-x[x < 0])[::-1]
+    out = []
+    for m in range(20, m_max):
+        out.append(1 / np.mean(np.log(L[:m] / L[m])))
+    return np.arange(20, m_max), np.array(out)
+
+m, alpha_hat = hill(r.to_numpy())
+plt.figure(figsize=(7, 3.2))
+plt.plot(m, alpha_hat); plt.axhline(4, ls="--", c="gray", lw=.8)
+plt.xlabel("m (observaciones extremas)"); plt.ylabel("α̂ Hill")
+```
+
+### Valor en riesgo (VaR) al 99 %
+
+$\mathrm{VaR}_{99\%}$ del retorno diario es el cuantil 1 % cambiado de signo. Comparamos los tres enfoques y contamos las *excedencias* (días con pérdida mayor que el VaR; esperadas: 1 %).
+
+```{python}
+#| label: tbl-var
+#| tbl-cap: "VaR 99 % diario (en %) y tasa de excedencias."
+alpha = 0.01
+var_n = -stats.norm.ppf(alpha, mu, sd)
+var_t = -stats.t.ppf(alpha, nu, loc, sc)
+var_e = -np.quantile(r, alpha)
+tab = pd.DataFrame({"VaR 99 %": [var_n, var_t, var_e]}, index=["normal", "t ajustada", "empírico"])
+tab["excedencias"] = [(r < -v).mean() for v in tab["VaR 99 %"]]
+tab.round(4)
+```
+
+::: {.callout-warning}
+Este análisis es **incondicional** y *in-sample*. En la práctica la volatilidad cambia en el tiempo: un VaR condicional (GARCH) es el tema del Módulo 2 y 3.
+:::
+
+### Agrupamiento de volatilidad
+
+```{python}
+#| label: fig-acf
+#| fig-cap: "ACF muestral de r y de r². Las bandas son ±1,96/√n (ruido blanco)."
+#| fig-height: 3.2
+nl = 30
+fig, ax = plt.subplots(1, 2, figsize=(9, 3.2), sharey=True)
+for a, x, t in zip(ax, (r, r**2), ("r", "r²")):
+    a.bar(range(1, nl + 1), acf(x, nlags=nl)[1:], width=.6)
+    a.axhline(1.96 / np.sqrt(len(x)), ls="--", c="r", lw=.8)
+    a.axhline(-1.96 / np.sqrt(len(x)), ls="--", c="r", lw=.8)
+    a.set_title(f"ACF de {t}"); a.set_xlabel("rezago")
+fig.tight_layout()
+```
+
+Los retornos casi no están autocorrelacionados, pero **sus cuadrados sí**: no son independientes aunque sean “incorrelacionados”. Ese es el punto de partida de ARCH/GARCH.
+
+### Resumen
+
+- La normal es una mala descripción **incondicional** de los retornos diarios; la $t$ con pocos grados de libertad es un primer modelo razonable.
+- Subestimar colas implica subestimar el VaR y el capital necesario.
+- Hay que modelar la **dinámica** de la volatilidad (Módulo 2) y la **asimetría** (EGARCH, TARCH).
+
+## Laboratorio (Marimo)
+
+Tablero Marimo interactivo: slider de $\nu$ y de tamaño muestral; al moverlos se actualizan histograma log, QQ, curtosis, JB y probabilidades de cola.
+
+## Tarea
+
+Con un activo real (`cargar_yahoo`) o simulado distinto: (1) tabla de diagnóstico; (2) ajuste normal vs. $t$ vs. $t$ asimétrica; (3) VaR 99 % y excedencias; (4) un párrafo interpretando el índice de cola.
+
+## Lecturas
+
+- @cont2001, secciones 2–5.
+- @tsay2010, cap. 1.
+- @mcneil2015, cap. 3 (colas, VaR).
+
+## Conexión con la especialización
+
+Motiva GARCH con errores $t$, EGARCH/TARCH para asimetría (Módulo 2) y el cálculo de VaR/ES (Módulo 3).
+
+---
+
+[← S08](../s08/index.qmd) · [Todas las sesiones](../index.qmd) · [S10 →](../s10/index.qmd)

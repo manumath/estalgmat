@@ -1,0 +1,70 @@
+---
+title: "Entorno de trabajo"
+---
+
+Todo el módulo se ejecuta con **un único entorno reproducible**. Tiempo estimado de instalación: 20–30 min. Se completa y verifica en la [Sesión 1](sesiones/s01/index.qmd).
+
+## 1. Herramientas
+
+| Herramienta | Rol | Instalación |
+|---|---|---|
+| [Positron](https://positron.posit.co/download.html) | IDE (Python/R, Quarto, Jupyter, explorador de variables) | Instalador oficial |
+| [uv](https://docs.astral.sh/uv/getting-started/installation/) | Gestor de Python, entornos y dependencias | ver abajo |
+| [Git](https://git-scm.com/downloads) | Control de versiones y entrega de tareas | Instalador oficial |
+| [Quarto](https://quarto.org/docs/get-started/) | Sitio, diapositivas e informes | **Ya incluido** en el entorno (`uv run quarto …`) |
+| [Marimo](https://marimo.io) | Cuadernos reactivos | **Ya incluido** en el entorno (`uv run marimo …`) |
+
+::: {.panel-tabset}
+## Linux / macOS
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+## Windows (PowerShell)
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+:::
+
+## 2. Clonar y sincronizar
+
+```bash
+git clone https://github.com/manumath/estalgmat.git
+cd estalgmat
+uv sync            # instala Python 3.12 (si falta) y las dependencias de uv.lock
+```
+
+Datos reales opcionales (Yahoo Finance, FRED): `uv sync --extra datos`.
+
+## 3. Configurar Positron
+
+1. *File ▸ Open Folder…* → carpeta `estalgmat`.
+2. Seleccionar el intérprete **`.venv`** (esquina superior derecha o `Python: Select Interpreter`).
+3. Instalar la extensión **Marimo** (panel de extensiones; Positron usa el registro Open VSX) y la extensión **Quarto** (viene con Positron).
+4. Abrir `sesiones/s01/lab.py` y pulsar *Open in Marimo editor*; alternativa en navegador: `uv run marimo edit sesiones/s01/lab.py`.
+
+## 4. Verificación
+
+```bash
+uv run python -c "import numpy, pandas, scipy, statsmodels; print('OK')"
+uv run quarto check
+uv run marimo --version
+```
+
+## 5. Flujo de trabajo diario
+
+```bash
+uv run quarto preview                    # sitio con recarga en vivo
+uv run marimo edit sesiones/sXX/lab.py   # laboratorio de la sesión
+uv add <paquete>                         # añadir dependencia (actualiza pyproject.toml y uv.lock)
+git add -A && git commit -m "S05: tarea" && git push
+```
+
+## 6. Si prefieres Jupyter
+
+Cada laboratorio puede convertirse: `uv run marimo export ipynb sesiones/sXX/lab.py -o sesiones/sXX/lab.ipynb`. Positron ejecuta `.ipynb` con el kernel del `.venv` (`ipykernel` ya está instalado).
+
+## Solución de problemas
+
+- **`uv: command not found`** → reinicia la terminal tras instalar.
+- **Positron no ve `.venv`** → ejecuta `uv sync` primero y luego *Python: Select Interpreter ▸ Enter interpreter path…* → `.venv/bin/python` (Windows: `.venv\Scripts\python.exe`).
+- **Proxy corporativo** → define `HTTPS_PROXY` y `UV_NATIVE_TLS=1`.

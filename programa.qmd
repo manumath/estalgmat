@@ -1,0 +1,74 @@
+---
+title: "Programa del módulo"
+---
+
+## Propósito
+
+Proveer a los participantes de la **base estadística, matricial y computacional** necesaria para abordar los módulos de modelización de series de tiempo. Cada tema se estudia con un enfoque *finanzas/macroeconomía*: se parte de un hecho estilizado en los datos, se formaliza con teoría y se verifica por simulación y estimación en Python.
+
+## Resultados de aprendizaje
+
+Al finalizar el módulo, el participante podrá:
+
+1. **Configurar y mantener** un proyecto analítico reproducible (uv + Git + Quarto + Marimo) en Positron.
+2. **Manipular y explorar** series financieras y macroeconómicas con NumPy/pandas y producir un EDA documentado.
+3. **Aplicar** probabilidad y distribuciones (normal, log-normal, t, χ², F) y **diagnosticar colas pesadas y asimetría** en retornos.
+4. **Estimar** parámetros (MM, MV), **construir intervalos** (analíticos y bootstrap) y **contrastar hipótesis** (paramétricas y no paramétricas) con criterio sobre supuestos y potencia.
+5. **Operar con matrices** y expresar el modelo lineal y MCO en forma matricial; entender rango, inversibilidad y condicionamiento.
+6. **Usar autovalores, Cholesky, SVD y PCA** como herramientas que reaparecen en VAR/SVAR, modelos de factores y VaR.
+
+## Mapa de sesiones
+
+| # | Bloque | Sesión | Contenido del programa que cubre |
+|--:|:--:|---|---|
+| [1](sesiones/s01/index.qmd) | A | Bienvenida y entorno de trabajo reproducible | Introducción a la programación en Python |
+| [2](sesiones/s02/index.qmd) | A | Python científico I: lenguaje y NumPy | Introducción a la programación en Python |
+| [3](sesiones/s03/index.qmd) | A | Python científico II: pandas y series de tiempo | Introducción a la programación en Python |
+| [4](sesiones/s04/index.qmd) | A | Visualización y EDA de series financieras y macro | Análisis exploratorio de datos (EDA) |
+| [5](sesiones/s05/index.qmd) | B | Teoría de conjuntos y fundamentos de probabilidad | Teoría de conjuntos; introducción a la probabilidad |
+| [6](sesiones/s06/index.qmd) | B | Variables aleatorias, esperanza y momentos | Probabilidad y distribuciones |
+| [7](sesiones/s07/index.qmd) | B | Normal y log-normal; LGN y TCL | Distribuciones comunes en finanzas |
+| [8](sesiones/s08/index.qmd) | B | Distribuciones t de Student, χ² y F | Distribuciones comunes en finanzas |
+| [9](sesiones/s09/index.qmd) | B | Colas pesadas y asimetría en datos financieros | Colas pesadas y distribuciones asimétricas |
+| [10](sesiones/s10/index.qmd) | C | Estimación puntual: momentos y máxima verosimilitud | Estimación puntual |
+| [11](sesiones/s11/index.qmd) | C | Intervalos de confianza y bootstrap | Estimación por intervalos |
+| [12](sesiones/s12/index.qmd) | C | Pruebas de hipótesis paramétricas (Z, t) | Pruebas de hipótesis (test Z, test t) |
+| [13](sesiones/s13/index.qmd) | C | Pruebas no paramétricas y de bondad de ajuste | Pruebas no paramétricas |
+| [14](sesiones/s14/index.qmd) | D | Matrices: tipos, operaciones y matriz de covarianzas | Definición, tipos y operaciones elementales |
+| [15](sesiones/s15/index.qmd) | D | Sistemas lineales, rango e inversibilidad | Rango, consistencia, inversibilidad |
+| [16](sesiones/s16/index.qmd) | D | MCO en forma matricial | Uso en la estimación de coeficientes |
+| [17](sesiones/s17/index.qmd) | D | Autovalores, autovectores y formas cuadráticas | Autovalores y autovectores |
+| [18](sesiones/s18/index.qmd) | D | Descomposición en valores singulares (SVD) y PCA | SVD |
+| [19](sesiones/s19/index.qmd) | E | Taller integrador: análisis de una cartera | Integración del módulo |
+| [20](sesiones/s20/index.qmd) | E | Evaluación final y puente al Módulo 2 | Integración / evaluación |
+
+## Formato de cada sesión (90 min)
+
+| Min | Momento | Descripción |
+|:--|---|---|
+| 0–10 | **Apertura** | Retroalimentación de la tarea anterior y pregunta motivadora con datos reales/simulados. |
+| 10–45 | **Exposición** | Teoría con diapositivas Reveal.js; demostraciones en vivo en Positron. |
+| 45–50 | **Pausa activa** | — |
+| 50–80 | **Laboratorio** | Cuaderno Marimo guiado, en parejas; el docente circula. |
+| 80–90 | **Cierre** | Síntesis, “muddiest point” y asignación de la tarea. |
+
+## Dinámica de trabajo y herramientas
+
+- **Positron** como IDE: consola/explorador de variables, soporte para Quarto, Jupyter y Marimo.
+- **uv** fija versión de Python y dependencias (`pyproject.toml` + `uv.lock`): *cada participante ejecuta exactamente lo mismo*.
+- **Marimo** para laboratorios reactivos (archivos `.py` versionables, sin estado oculto). Alternativa: Jupyter para quien lo prefiera, usando los mismos datos y funciones de `estalgmat`.
+- **Quarto** para el sitio del curso, las diapositivas y los informes entregables (HTML/PDF).
+- **Git** para la entrega de tareas.
+- **Datos**: simuladores reproducibles incluidos (funcionan sin conexión) y cargador opcional de datos reales (Yahoo Finance, FRED).
+
+## Conexión con el resto de la especialización
+
+| Se aprende en el Módulo 1 | Se usa luego en |
+|---|---|
+| Momentos, curtosis, QQ-plot, Student-t | Módulo 2: GARCH con errores t, EGARCH, VaR |
+| MV y bootstrap | Estimación de ARMA/GARCH/MS; Módulo 7 (bayesiano) |
+| Pruebas de hipótesis y no paramétricas | Tests ADF/PP/KPSS, Ljung-Box, eventos, EMH |
+| MCO matricial, $(X'X)^{-1}X'y$ | Regresión, VAR, SVAR, GMM |
+| Autovalores y matriz compañera | Estacionariedad de VAR, test de Johansen |
+| Cholesky | Identificación en SVAR, simulación multivariada |
+| SVD/PCA | Modelos de factores, FAVAR, nowcasting |

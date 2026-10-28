@@ -1,0 +1,68 @@
+---
+title: "S20 · Evaluación final y puente al Módulo 2"
+subtitle: "Bloque E · Integración"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 20 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Presentar y defender los resultados del proyecto integrador.
+- Evaluar la reproducibilidad de los informes de otros equipos.
+- Conectar los conceptos del módulo con estacionariedad, ARMA y GARCH.
+- Identificar lagunas individuales y plan de refuerzo.
+
+## Pregunta motivadora
+
+> Si los precios no son estacionarios pero los retornos sí lo parecen, ¿qué significa exactamente “estacionario”?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Logística de presentaciones; verificación de que todos los informes renderizan (`quarto render`). |
+| 10–60 | **Presentaciones** | Equipos: 8 min + 2 min de preguntas; evaluación con rúbrica (docente + pares). |
+| 60–70 | **Reproducibilidad en vivo** | Un equipo sorteado clona y renderiza desde cero ante el grupo. |
+| 70–85 | **Puente al Módulo 2** | Procesos estocásticos, estacionariedad, ACF; ejemplos: caminata aleatoria vs. AR(1); hoja de ruta ARMA→GARCH. |
+| 85–90 | **Cierre** | Encuesta del módulo y entrega de retroalimentación individual. |
+
+:::
+
+## Contenidos
+
+### Rúbrica del proyecto (resumen)
+
+Corrección técnica 35 · Interpretación 25 · Reproducibilidad 20 · Comunicación 20 (ver [Evaluación](../../evaluacion.qmd)).
+
+### Puente: de variables aleatorias a procesos estocásticos
+
+- Una serie temporal es **una** realización de un proceso $\{X_t\}$; el TCL/LGN clásicos suponen muestras iid → ¿qué cambia con dependencia?
+- Estacionariedad débil: $E[X_t]=\mu$, $\operatorname{Var}(X_t)=\sigma^2$, $\operatorname{Cov}(X_t,X_{t-k})=\gamma_k$ (no depende de $t$).
+- Ejemplos para el Módulo 2: ruido blanco, caminata aleatoria, AR(1) con $\phi\in\{0{,}5;\ 0{,}95;\ 1\}$.
+
+## Laboratorio (Marimo)
+
+Cuaderno de “cierre”: simulaciones de ruido blanco, AR(1) y caminata aleatoria con sus ACF (adelanto del Módulo 2).
+
+## Tarea
+
+Plan de estudio personal para las lagunas detectadas; lectura previa de @tsay2010, cap. 2.
+
+## Lecturas
+
+- @tsay2010, cap. 2.
+- @hansen2022, cap. 14 (series de tiempo).
+
+## Conexión con la especialización
+
+Inicio del Módulo 2: estacionariedad, tests ADF/PP/KPSS, ARMA, pronóstico, TAR/STAR, ARCH/GARCH y Markov-Switching.
+
+---
+
+[← S19](../s19/index.qmd) · [Todas las sesiones](../index.qmd)

@@ -1,0 +1,72 @@
+---
+title: "S12 · Pruebas de hipótesis paramétricas (Z, t)"
+subtitle: "Bloque C · Inferencia estadística"
+---
+
+::: {.sesion-meta}
+<span class="badge-s">Sesión 12 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+:::
+
+## Objetivos de aprendizaje
+
+Al terminar la sesión el participante podrá:
+
+- Formular $H_0$ y $H_1$, estadístico, región crítica, p-valor y potencia.
+- Distinguir error tipo I y II y calcular potencia por fórmula y por simulación.
+- Aplicar pruebas Z y t (una muestra, dos muestras con Welch, pareadas) y pruebas de varianza.
+- Relacionar test e intervalo de confianza; reconocer la violación de supuestos en series de tiempo.
+
+## Pregunta motivadora
+
+> Un fondo reporta un retorno medio diario de 0,04 %: ¿es distinto de cero o es azar?
+
+## Agenda (90 min)
+
+::: {.agenda}
+
+| Min | Momento | Actividad |
+|:--|---|---|
+| 0–10 | **Apertura** | Discusión: ¿qué significa p = 0,03? Cuatro frases, ¿cuál es correcta? |
+| 10–20 | **Exposición** | Marco de decisión: hipótesis, estadístico, errores I/II, nivel, p-valor, potencia. |
+| 20–35 | **Exposición** | Z y t (1 y 2 muestras, Welch, pareada); $\chi^2$ para varianza y F para razón de varianzas; dualidad IC–test. |
+| 35–45 | **Exposición** | LRT, Wald y score (idea); advertencias: autocorrelación y heterocedasticidad invalidan los errores estándar clásicos. |
+| 45–50 | **Pausa activa** | Estirarse, consultas informales. |
+| 50–60 | **Laboratorio** | Pruebas con `scipy.stats.ttest_1samp/ttest_ind/ttest_rel` sobre retornos de dos activos. |
+| 60–80 | **Laboratorio** | Curvas de potencia por simulación; tamaño real de la prueba t con datos GARCH-t (¿se mantiene el 5 %?). |
+| 80–90 | **Cierre** | Síntesis de ideas clave, “punto más confuso” (1 min por persona) y asignación de la tarea. |
+
+:::
+
+## Contenidos
+
+$$
+t=\frac{\bar x-\mu_0}{s/\sqrt n}\ \overset{H_0}{\sim}\ t_{n-1},\qquad
+\text{p-valor}=P\bigl(|T|\ge|t_{\text{obs}}|\mid H_0\bigr).
+$$
+
+**Potencia:** $1-\beta=P(\text{rechazar }H_0\mid H_1)$; crece con $n$, con el tamaño del efecto y con $\alpha$.
+
+**Welch:** $t=\dfrac{\bar x_1-\bar x_2}{\sqrt{s_1^2/n_1+s_2^2/n_2}}$ con gl de Satterthwaite.
+
+**Alerta:** con $r_t$ heterocedástico, el estadístico t usual puede tener tamaño distinto del nominal → errores robustos (HAC) en el Módulo 2.
+
+## Laboratorio (Marimo)
+
+Tabla “tamaño real” vs. “tamaño nominal” para distintas distribuciones y tamaños muestrales.
+
+## Tarea
+
+Contrastar si el retorno medio es nulo y si la volatilidad cambió tras una fecha elegida; reportar efecto, IC y p-valor con interpretación.
+
+## Lecturas
+
+- @casella2002, cap. 8.
+- @hogg2019, caps. 4 y 6.
+
+## Conexión con la especialización
+
+Los contrastes de raíz unitaria (ADF, PP, KPSS), Ljung–Box y los estudios de eventos son pruebas de hipótesis con distribuciones no estándar.
+
+---
+
+[← S11](../s11/index.qmd) · [Todas las sesiones](../index.qmd) · [S13 →](../s13/index.qmd)
