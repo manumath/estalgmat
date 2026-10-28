@@ -1,0 +1,119 @@
+---
+title: "Estimación puntual: momentos y máxima verosimilitud"
+subtitle: "Módulo 1 · Sesión 10"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S10"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+Dos analistas estiman la volatilidad con fórmulas distintas y obtienen cifras diferentes.
+
+. . .
+
+¿Cuál es “mejor” y **por qué**?
+
+## Estimadores
+
+Muestra $X_1,\dots,X_n$ iid $f(x;\theta)$. Un **estimador** es una función $\hat\theta=T(X_1,\dots,X_n)$.
+
+- Sesgo: $E[\hat\theta]-\theta$
+- ECM $=\operatorname{Var}(\hat\theta)+\text{sesgo}^2$
+- Consistencia: $\hat\theta\xrightarrow{p}\theta$
+
+## Método de momentos
+
+Igualar momentos muestrales y teóricos.
+
+Ejemplo ($t_\nu$): curtosis exceso $=6/(\nu-4)$
+
+$$\hat\nu_{MM}=4+\frac{6}{\hat\kappa_{ex}}$$
+
+::: {.callout-warning}
+Depende de un momento de orden 4 muestral: muy inestable con colas pesadas.
+:::
+
+## Máxima verosimilitud
+
+$$
+\ell(\theta)=\sum_i\ln f(x_i;\theta),\qquad\hat\theta_{MV}=\arg\max\ell(\theta)
+$$
+
+Score $s(\theta)=\partial\ell/\partial\theta$; información de Fisher
+
+$$I(\theta)=-E\!\left[\frac{\partial^2\ln f}{\partial\theta\,\partial\theta'}\right]$$
+
+## Propiedades del EMV
+
+::: {.incremental}
+- Consistente
+- **Normal asintótico:** $\sqrt n(\hat\theta-\theta_0)\to N(0,I(\theta_0)^{-1})$
+- **Invariante:** el EMV de $g(\theta)$ es $g(\hat\theta)$
+- Eficiente asintóticamente (Cramér–Rao)
+:::
+
+## ¿Sesgo o ECM?
+
+```{python}
+import numpy as np, pandas as pd
+rng = np.random.default_rng(10)
+X = rng.normal(0, 2, (100_000, 10))
+{k: dict(sesgo=round(float(v.mean() - 4), 3), ECM=round(float(((v - 4)**2).mean()), 3))
+ for k, v in {"MV (÷n)": X.var(1), "S² (÷n−1)": X.var(1, ddof=1)}.items()}
+```
+
+El EMV es sesgado pero tiene **menor ECM**.
+
+## Normalidad asintótica
+
+```{python}
+#| output-location: slide
+import matplotlib.pyplot as plt
+from scipy import stats
+lam = 2.0; z = np.linspace(-4, 4, 200)
+fig, ax = plt.subplots(1, 3, figsize=(10, 3.2), sharey=True)
+for a, n in zip(ax, (5, 30, 300)):
+    lh = 1 / rng.exponential(1 / lam, (20_000, n)).mean(1)
+    a.hist(np.sqrt(n) * (lh - lam) / lam, bins=60, range=(-4, 6), density=True, alpha=.5)
+    a.plot(z, stats.norm.pdf(z), "k"); a.set_title(f"n={n}")
+fig.tight_layout()
+```
+
+## EMV numérico de la $t$
+
+Reparametrizar: $\sigma=e^s$, $\nu=2+e^u$ → optimización sin restricciones.
+
+```python
+def nll(th, x):
+    mu, ls, lu = th
+    return -stats.t.logpdf(x, 2 + np.exp(lu), mu, np.exp(ls)).sum()
+res = optimize.minimize(nll, x0, args=(r,), method="BFGS")
+```
+
+EE: hessiana numérica $\to$ $\widehat{\operatorname{Var}}=H^{-1}$ → método delta para $\nu$.
+
+## Verosimilitud perfilada
+
+```{python}
+#| output-location: slide
+from estalgmat import retornos_garch_t
+r = retornos_garch_t(3000, seed=2026)["ret"].to_numpy()
+grid = np.linspace(2.5, 20, 50)
+ll = np.array([stats.t.logpdf(r, v, *stats.t.fit(r, f0=v)[1:]).sum() for v in grid])
+plt.figure(figsize=(8, 3.5)); plt.plot(grid, ll)
+plt.axhline(ll.max() - stats.chi2.ppf(.95, 1) / 2, c="r", ls="--"); plt.xlabel("ν"); plt.grid(alpha=.3)
+```
+
+IC 95 % = valores de $\nu$ por encima de la línea roja.
+
+## Tarea
+
+- EMV de exponencial y Poisson
+- $\hat\nu$ de la $t$ para 3 activos y comparar MM vs. MV

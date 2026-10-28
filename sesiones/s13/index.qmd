@@ -4,7 +4,7 @@ subtitle: "Bloque C · Inferencia estadística"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 13 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 13 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -48,6 +48,103 @@ $$
 **Permutación:** bajo $H_0$ las etiquetas son intercambiables → distribución nula exacta por remuestreo sin reemplazo.
 
 **Múltiples pruebas:** Bonferroni $\alpha/m$; Holm (secuencial); BH controla la tasa de falsos descubrimientos (FDR).
+
+### Demostración ejecutada: normalidad de varios activos
+
+```{python}
+#| label: tbl-normalidad
+#| tbl-cap: "Pruebas de normalidad (p-valores). n = 1 000 por serie."
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from scipy import stats
+from statsmodels.stats.multitest import multipletests
+from estalgmat import retornos_garch_t
+rng = np.random.default_rng(13)
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+
+series = {"normal": rng.normal(0, 1, 1000),
+          "t(10)": rng.standard_t(10, 1000),
+          "t(4)": rng.standard_t(4, 1000),
+          "GARCH-t": retornos_garch_t(1000, seed=1)["ret"].to_numpy(),
+          "lognormal": rng.lognormal(0, .5, 1000)}
+filas = {}
+for nom, x in series.items():
+    z = (x - x.mean()) / x.std(ddof=1)
+    filas[nom] = {"Shapiro–Wilk": stats.shapiro(x).pvalue, "Jarque–Bera": stats.jarque_bera(x).pvalue,
+                  "Anderson–Darling": stats.anderson(x).statistic,
+                  "KS (parám. estimados)": stats.kstest(z, "norm").pvalue}
+pd.DataFrame(filas).T.round(4)
+```
+
+::: {.callout-warning}
+El p-valor de KS con parámetros **estimados** es conservador (Lilliefors corrige esto). El estadístico de Anderson–Darling se compara con valores críticos (`stats.anderson(...).critical_values`), no con un p-valor.
+:::
+
+### Mann–Whitney vs. t
+
+```{python}
+#| label: tbl-mw
+#| tbl-cap: "Retornos antes vs. después de un evento (datos con colas pesadas): t de Welch, Mann–Whitney y permutación."
+x = rng.standard_t(3, 600) * 0.01
+a, b = x[:300], x[300:] + 0.0015
+pt = stats.ttest_ind(a, b, equal_var=False).pvalue
+pm = stats.mannwhitneyu(a, b).pvalue
+pp = stats.permutation_test((a, b), lambda u, v: u.mean() - v.mean(), n_resamples=5000, random_state=1).pvalue
+pd.Series({"Welch": pt, "Mann–Whitney": pm, "permutación (dif. medias)": pp}, name="p-valor").round(4).to_frame()
+```
+
+### Efecto día-de-la-semana sobre ruido puro
+
+```{python}
+#| label: tbl-dow
+#| tbl-cap: "Kruskal–Wallis para el efecto del día de la semana en el retorno de un activo simulado sin efecto calendario."
+df = retornos_garch_t(2500, seed=21)
+df["dia"] = df.index.dayofweek
+grupos = [g["ret"].to_numpy() for _, g in df.groupby("dia")]
+kw = stats.kruskal(*grupos)
+print(f"Kruskal–Wallis: H = {kw.statistic:.3f}, p-valor = {kw.pvalue:.3f}")
+pd.DataFrame({"media": df.groupby("dia")["ret"].mean(), "mediana": df.groupby("dia")["ret"].median()}).rename(
+    index=dict(enumerate(["lun", "mar", "mié", "jue", "vie"]))).round(4)
+```
+
+### Veinte efectos de calendario: múltiples pruebas
+
+Contrastamos 20 “anomalías” en series de ruido puro (no hay ningún efecto real).
+
+```{python}
+#| label: tbl-multiples
+#| tbl-cap: "20 pruebas sobre ruido puro: rechazos al 5 % sin y con corrección (Bonferroni, Holm, Benjamini–Hochberg)."
+def p20(rng):
+    return np.array([stats.ttest_1samp(rng.standard_normal(250), 0).pvalue for _ in range(20)])
+sin, bonf, holm, bh = [], [], [], []
+for _ in range(500):
+    p = p20(rng)
+    sin.append((p < .05).sum()); 
+    bonf.append(multipletests(p, method="bonferroni")[0].sum())
+    holm.append(multipletests(p, method="holm")[0].sum())
+    bh.append(multipletests(p, method="fdr_bh")[0].sum())
+pd.DataFrame({"rechazos medios por 20 pruebas": [np.mean(sin), np.mean(bonf), np.mean(holm), np.mean(bh)],
+              "P(≥1 falso descubrimiento)": [np.mean(np.array(v) > 0) for v in (sin, bonf, holm, bh)]},
+             index=["sin corrección", "Bonferroni", "Holm", "BH (FDR)"]).round(3)
+```
+
+Sin corrección, la probabilidad de encontrar *al menos una* “anomalía” es $1-0{,}95^{20}\approx 64\,\%$. Con Bonferroni/Holm se controla la probabilidad de **cualquier** falso positivo (FWER) al 5 %.
+
+### Prueba de permutación para una diferencia de volatilidades
+
+```{python}
+#| label: fig-perm
+#| fig-cap: "Distribución nula (permutación) de la razón de desviaciones estándar; la línea roja es la razón observada."
+#| fig-height: 3
+y = retornos_garch_t(1000, seed=3)["ret"].to_numpy()
+a, b = y[:500], y[500:]
+est = lambda u, v: np.log(u.std(ddof=1) / v.std(ddof=1))
+res = stats.permutation_test((a, b), est, permutation_type="independent", n_resamples=5000, random_state=2)
+plt.figure(figsize=(7.5, 3)); plt.hist(res.null_distribution, bins=50, alpha=.6)
+plt.axvline(res.statistic, c="r"); plt.title(f"p-valor (permutación) = {res.pvalue:.3f}")
+```
+
+Intercambiar etiquetas ignora la dependencia temporal: en series con agrupamiento de volatilidad la permutación simple solo es una aproximación (alternativa: permutación por bloques).
 
 ## Laboratorio (Marimo)
 

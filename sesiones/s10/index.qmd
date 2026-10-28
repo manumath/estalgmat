@@ -4,7 +4,7 @@ subtitle: "Bloque C · Inferencia estadística"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 10 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 10 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -51,6 +51,105 @@ con $I(\theta)=-E\bigl[\partial^2\ln f/\partial\theta\,\partial\theta'\bigr]$.
 **Sesgo de la varianza MV:** $E[\hat\sigma^2_{MV}]=\tfrac{n-1}{n}\sigma^2$; $S^2$ es insesgado.
 
 **Práctica numérica:** reparametrizar ($\sigma=e^{s}$, $\nu=2+e^{u}$) para optimizar sin restricciones; varios valores iniciales.
+
+### Demostración ejecutada: sesgo y ECM de estimadores de $\sigma^2$
+
+```{python}
+#| label: tbl-sesgo
+#| tbl-cap: "Sesgo y ECM de dos estimadores de σ² (n = 10, σ² = 4, 100 000 réplicas)."
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from scipy import stats, optimize
+rng = np.random.default_rng(10)
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+
+n, s2 = 10, 4.0
+X = rng.normal(0, np.sqrt(s2), (100_000, n))
+est = {"MV (÷n)": X.var(1, ddof=0), "muestral S² (÷n−1)": X.var(1, ddof=1)}
+pd.DataFrame({k: {"sesgo": v.mean() - s2, "varianza": v.var(), "ECM": ((v - s2)**2).mean()}
+              for k, v in est.items()}).round(4)
+```
+
+El EMV es sesgado ($E=\tfrac{n-1}{n}\sigma^2$) pero tiene **menor ECM** que $S^2$: insesgadez no es lo único que importa.
+
+### Normalidad asintótica del EMV (exponencial)
+
+Para $X_i\sim\text{Exp}(\lambda)$: $\hat\lambda=1/\bar X$ y $I(\lambda)=1/\lambda^2$, por lo que $\sqrt n(\hat\lambda-\lambda)\to N(0,\lambda^2)$.
+
+```{python}
+#| label: fig-asint
+#| fig-cap: "Distribución de √n(λ̂−λ)/λ para distintos n: converge a N(0,1) (curva negra)."
+#| fig-height: 3
+lam = 2.0
+fig, ax = plt.subplots(1, 3, figsize=(10, 3), sharey=True)
+z = np.linspace(-4, 4, 200)
+for a, n_ in zip(ax, (5, 30, 300)):
+    lam_hat = 1 / rng.exponential(1 / lam, (20_000, n_)).mean(1)
+    a.hist(np.sqrt(n_) * (lam_hat - lam) / lam, bins=60, range=(-4, 6), density=True, alpha=.5)
+    a.plot(z, stats.norm.pdf(z), "k"); a.set_title(f"n = {n_}")
+fig.tight_layout()
+```
+
+### EMV numérico de una $t$ de Student
+
+Reparametrizamos $\sigma=e^{s}$, $\nu=2+e^{u}$ para optimizar sin restricciones, y obtenemos errores estándar con la hessiana numérica (información de Fisher observada) y el método delta.
+
+```{python}
+#| label: tbl-emv-t
+#| tbl-cap: "EMV de la t (retornos GARCH-t, n = 3 000): optimización propia vs. scipy.stats.t.fit."
+from estalgmat import retornos_garch_t
+r = retornos_garch_t(3000, seed=2026)["ret"].to_numpy()
+
+def nll(th, x):
+    mu, ls, lu = th
+    return -stats.t.logpdf(x, 2 + np.exp(lu), mu, np.exp(ls)).sum()
+
+def hessiana(f, x, args, h=1e-4):
+    k = len(x); H = np.zeros((k, k))
+    for i in range(k):
+        for j in range(k):
+            ei, ej = np.eye(k)[i] * h, np.eye(k)[j] * h
+            H[i, j] = (f(x+ei+ej, *args) - f(x+ei-ej, *args) - f(x-ei+ej, *args) + f(x-ei-ej, *args)) / (4*h*h)
+    return H
+
+x0 = np.array([r.mean(), np.log(r.std()), np.log(3.0)])
+op = optimize.minimize(nll, x0, args=(r,), method="BFGS")
+cov = np.linalg.inv(hessiana(nll, op.x, (r,)))
+mu_h, sg_h, nu_h = op.x[0], np.exp(op.x[1]), 2 + np.exp(op.x[2])
+se_nu = np.exp(op.x[2]) * np.sqrt(cov[2, 2])            # método delta
+se_mu = np.sqrt(cov[0, 0])
+nu_s, loc_s, sc_s = stats.t.fit(r)
+pd.DataFrame({"ν̂": [nu_h, nu_s], "μ̂": [mu_h, loc_s], "σ̂ (escala)": [sg_h, sc_s],
+              "EE(ν̂)": [se_nu, np.nan], "EE(μ̂)": [se_mu, np.nan]},
+             index=["propio (BFGS)", "scipy t.fit"]).round(4)
+```
+
+### Método de momentos vs. máxima verosimilitud para $\nu$
+
+Como la curtosis en exceso es $6/(\nu-4)$, el MM da $\hat\nu_{MM}=4+6/\hat\kappa_{ex}$.
+
+```{python}
+#| label: mm-mv
+k_ex = stats.kurtosis(r)
+print(f"curtosis en exceso muestral = {k_ex:.2f} → ν̂_MM = {4 + 6 / k_ex:.2f}  |  ν̂_MV = {nu_h:.2f}")
+```
+
+El MM depende de un momento de orden 4 muestral (muy inestable con colas pesadas); la MV usa toda la forma de la densidad.
+
+### Verosimilitud perfilada en $\nu$
+
+```{python}
+#| label: fig-perfil
+#| fig-cap: "Log-verosimilitud perfilada en ν con el IC aproximado al 95 % (corte χ²₁/2)."
+#| fig-height: 3
+grid = np.linspace(2.5, 20, 60)
+ll = np.array([stats.t.logpdf(r, v, *stats.t.fit(r, f0=v)[1:]).sum() for v in grid])
+corte = ll.max() - stats.chi2.ppf(.95, 1) / 2
+plt.figure(figsize=(7.5, 3))
+plt.plot(grid, ll); plt.axhline(corte, ls="--", c="r", lw=.8); plt.axvline(nu_h, c="k", lw=.8)
+dentro = grid[ll >= corte]
+plt.title(f"IC 95 % perfilado para ν ≈ [{dentro.min():.1f}, {dentro.max():.1f}]"); plt.xlabel("ν")
+```
 
 ## Laboratorio (Marimo)
 

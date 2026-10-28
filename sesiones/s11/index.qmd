@@ -4,7 +4,7 @@ subtitle: "Bloque C · Inferencia estadística"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 11 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 11 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -50,6 +50,95 @@ $\sqrt n\bigl(g(\hat\theta)-g(\theta)\bigr)\to N\bigl(0,\ g'(\theta)^2V\bigr)$.
 **Sharpe:** $\widehat{SR}=\bar r/s$; $\operatorname{Var}(\widehat{SR})\approx\tfrac1n\bigl(1+\tfrac12 SR^2\bigr)$ bajo iid normal.
 
 **Bootstrap por bloques:** remuestrear bloques de longitud $\ell\approx T^{1/3}$ para preservar la dependencia de corto plazo.
+
+### Demostración ejecutada: cobertura de intervalos
+
+```{python}
+#| label: tbl-cobertura
+#| tbl-cap: "Cobertura empírica del IC t del 95 % para la media (5 000 réplicas)."
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from scipy import stats
+rng = np.random.default_rng(11)
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+
+def cobertura(gen, mu, n, reps=5000, nivel=.95):
+    x = gen((reps, n)); m = x.mean(1); se = x.std(1, ddof=1) / np.sqrt(n)
+    q = stats.t.ppf(1 - (1 - nivel) / 2, n - 1)
+    return np.mean((m - q*se <= mu) & (mu <= m + q*se))
+
+fuentes = {"normal": (lambda s: rng.normal(0, 1, s), 0.0),
+           "t(3)": (lambda s: rng.standard_t(3, s), 0.0),
+           "lognormal(σ=1)": (lambda s: rng.lognormal(0, 1, s), np.exp(.5))}
+pd.DataFrame({nom: {n: cobertura(g, mu, n) for n in (10, 30, 100, 1000)}
+              for nom, (g, mu) in fuentes.items()}).rename_axis("n").round(3)
+```
+
+Bajo normalidad la cobertura es la nominal; con colas pesadas o fuerte asimetría **mejora con $n$** pero lentamente.
+
+### Cien intervalos
+
+```{python}
+#| label: fig-ic100
+#| fig-cap: "100 IC del 95 % para μ = 0 (n = 30). En rojo, los que no contienen μ."
+#| fig-height: 3.6
+x = rng.normal(0, 1, (100, 30)); m = x.mean(1); e = stats.t.ppf(.975, 29) * x.std(1, ddof=1) / np.sqrt(30)
+fallan = (m - e > 0) | (m + e < 0)
+plt.figure(figsize=(7.5, 3.6))
+plt.vlines(range(100), m - e, m + e, colors=np.where(fallan, "r", "C0"), lw=1)
+plt.axhline(0, c="k", lw=.8); plt.title(f"{fallan.sum()} de 100 no contienen μ")
+```
+
+### Bootstrap del ratio de Sharpe
+
+```{python}
+#| label: tbl-sharpe
+#| tbl-cap: "Sharpe diario: IC analítico (delta) vs. bootstrap percentil (B = 5 000)."
+from estalgmat import retornos_garch_t
+r = retornos_garch_t(1500, seed=2026, mu=0.05)["ret"].to_numpy()
+sharpe = lambda x: x.mean() / x.std(ddof=1)
+sr = sharpe(r); n = len(r)
+ee = np.sqrt((1 + .5 * sr**2) / n)
+bs = stats.bootstrap((r,), sharpe, n_resamples=5000, method="percentile", random_state=1)
+pd.DataFrame({"Sharpe": [sr, sr], "IC inf.": [sr - 1.96*ee, bs.confidence_interval.low],
+              "IC sup.": [sr + 1.96*ee, bs.confidence_interval.high]},
+             index=["analítico (iid normal)", "bootstrap iid"]).round(4)
+```
+
+### Bootstrap por bloques y VaR
+
+El bootstrap iid ignora la dependencia (agrupamiento de volatilidad). Con bloques móviles de longitud $\ell\approx T^{1/3}$ se preserva la dependencia de corto plazo.
+
+```{python}
+#| label: tbl-bloques
+#| tbl-cap: "IC al 95 % del VaR 1 % diario (en %): bootstrap iid vs. por bloques móviles (B = 2 000)."
+def boot_bloques(x, stat, B=2000, l=None, rng=rng):
+    n = len(x); l = l or int(round(n ** (1/3))); k = int(np.ceil(n / l))
+    out = np.empty(B)
+    for b in range(B):
+        ini = rng.integers(0, n - l + 1, k)
+        out[b] = stat(np.concatenate([x[i:i+l] for i in ini])[:n])
+    return out
+
+var99 = lambda x: -np.quantile(x, .01)
+b_iid = np.array([var99(rng.choice(r, len(r))) for _ in range(2000)])
+b_blq = boot_bloques(r, var99)
+fila = lambda b: [var99(r), *np.percentile(b, [2.5, 97.5])]
+pd.DataFrame([fila(b_iid), fila(b_blq)], columns=["VaR 1 %", "IC inf.", "IC sup."],
+             index=["iid", "bloques"]).round(3)
+```
+
+```{python}
+#| label: fig-boot
+#| fig-cap: "Distribución bootstrap del VaR 1 %: asimétrica, con cola derecha."
+#| fig-height: 3
+plt.figure(figsize=(7.5, 3)); plt.hist(b_blq, bins=50, alpha=.6, label="bloques"); plt.hist(b_iid, bins=50, alpha=.4, label="iid")
+plt.axvline(var99(r), c="k"); plt.legend()
+```
+
+::: {.callout-note}
+El IC del VaR es **asimétrico**: un cuantil extremo se estima con pocos datos de la cola y la incertidumbre es mayor hacia pérdidas más grandes.
+:::
 
 ## Laboratorio (Marimo)
 
