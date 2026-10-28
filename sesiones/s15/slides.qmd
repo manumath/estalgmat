@@ -1,0 +1,84 @@
+---
+title: "Sistemas lineales, rango e inversibilidad"
+subtitle: "Módulo 1 · Sesión 15"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S15"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+Dos regresores casi idénticos: ¿por qué el software devuelve coeficientes enormes y de signos opuestos?
+
+## Sistemas $Ax=b$
+
+Eliminación de Gauss–Jordan → forma escalonada reducida.
+
+::: {.incremental}
+- Solución **única**: rango$(A)=n$
+- **Infinitas**: consistente y rango $<n$
+- **Ninguna**: rango$(A)<$ rango$([A|b])$
+:::
+
+## Rouché–Frobenius
+
+$Ax=b$ consistente $\iff\operatorname{rang}A=\operatorname{rang}[A\mid b]$
+
+```{python}
+import numpy as np
+A = np.array([[1., 2., 1.], [2., 4., 3.], [1., 2., 2.]])
+for b in ([4., 11., 7.], [4., 11., 8.]):
+    print(np.linalg.matrix_rank(A), np.linalg.matrix_rank(np.column_stack([A, b])))
+```
+
+## Inversibilidad: equivalencias
+
+::: {.incremental}
+- $A$ inversible
+- $\det A\ne0$
+- $\operatorname{rang}A=n$
+- $Ax=0$ solo tiene la solución nula
+- columnas linealmente independientes
+:::
+
+## Condicionamiento
+
+$$\kappa(A)=\|A\|\|A^{-1}\|=\frac{\sigma_{\max}}{\sigma_{\min}}$$
+
+Se pierden $\approx\log_{10}\kappa$ cifras decimales.
+
+```{python}
+from scipy import linalg
+for n in (4, 8, 12):
+    H = linalg.hilbert(n); b = H @ np.ones(n)
+    print(n, f"{np.linalg.cond(H):.1e}", f"{np.linalg.norm(np.linalg.solve(H, b) - 1):.1e}")
+```
+
+## Multicolinealidad
+
+```{python}
+#| output-location: fragment
+rng = np.random.default_rng(15)
+for rho in (0, .9, .99, .9999):
+    x1 = rng.standard_normal(200); x2 = rho * x1 + np.sqrt(1 - rho**2) * rng.standard_normal(200)
+    X = np.column_stack([np.ones(200), x1, x2])
+    print(rho, f"κ(X'X)={np.linalg.cond(X.T @ X):.1e}", f"Var(β̂₁)∝{np.linalg.inv(X.T @ X)[1,1]:.3f}")
+```
+
+## Pseudoinversa
+
+$A^+=(A'A)^{-1}A'$ si el rango columna es completo (en general vía SVD).
+
+::: {.callout-important}
+En la práctica **no** se invierte $X'X$: se usa `lstsq` / QR / SVD.
+:::
+
+## Tarea
+
+Clasificar 6 sistemas y verificar con NumPy; ejemplo propio de multicolinealidad y su efecto en $\kappa(X'X)$.

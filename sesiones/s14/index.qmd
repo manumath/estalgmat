@@ -4,7 +4,7 @@ subtitle: "Bloque D · Álgebra matricial"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 14 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 14 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -51,6 +51,86 @@ $$
 - $\Sigma$ es simétrica y semidefinida positiva (se justifica en S17).
 - $\operatorname{tr}(AB)=\operatorname{tr}(BA)$; $\det(AB)=\det A\det B$; $(AB)^{-1}=B^{-1}A^{-1}$.
 - Estimador muestral: $\hat\Sigma=\tfrac1{n-1}\tilde X'\tilde X$, con $\tilde X$ centrada.
+
+### Demostración ejecutada: tipos de matrices y operaciones
+
+```{python}
+#| label: tipos
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from estalgmat import retornos_factor
+np.set_printoptions(precision=3, suppress=True)
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": False})
+
+A = np.array([[2., 1.], [1., 3.]]); B = np.array([[0., 1.], [1., 0.]])
+print("AB =\n", A @ B, "\nBA =\n", B @ A, "\n¿conmutan?", np.allclose(A @ B, B @ A))
+print("(AB)ᵀ = BᵀAᵀ:", np.allclose((A @ B).T, B.T @ A.T))
+print("(AB)⁻¹ = B⁻¹A⁻¹:", np.allclose(np.linalg.inv(A @ B), np.linalg.inv(B) @ np.linalg.inv(A)))
+print("tr(AB) = tr(BA):", np.isclose(np.trace(A @ B), np.trace(B @ A)),
+      "| det(AB) = det(A)det(B):", np.isclose(np.linalg.det(A @ B), np.linalg.det(A) * np.linalg.det(B)))
+```
+
+### Matriz de covarianzas y correlación de cuatro activos
+
+```{python}
+#| label: tbl-cov
+#| tbl-cap: "Matriz de covarianzas muestral (%²) de cuatro activos con factor de mercado común."
+df = retornos_factor(2000, p=4, seed=3)
+X = df[["A1", "A2", "A3", "A4"]].to_numpy()
+Xc = X - X.mean(0)
+S = Xc.T @ Xc / (len(X) - 1)
+print("a mano = np.cov:", np.allclose(S, np.cov(X, rowvar=False)))
+pd.DataFrame(S, index=df.columns[1:], columns=df.columns[1:]).round(3)
+```
+
+```{python}
+#| label: fig-corr
+#| fig-cap: "Matriz de correlaciones R = D^(-1/2) Σ D^(-1/2)."
+#| fig-height: 3.4
+D = np.diag(1 / np.sqrt(np.diag(S)))
+R = D @ S @ D
+plt.figure(figsize=(4.5, 3.6)); plt.imshow(R, vmin=-1, vmax=1, cmap="RdBu_r"); plt.colorbar()
+plt.xticks(range(4), df.columns[1:]); plt.yticks(range(4), df.columns[1:])
+for i in range(4):
+    for j in range(4): plt.text(j, i, f"{R[i,j]:.2f}", ha="center", va="center", fontsize=8)
+```
+
+### Varianza de portafolio como forma cuadrática
+
+```{python}
+#| label: portafolio
+w = np.array([.4, .3, .2, .1])
+var_forma = w @ S @ w
+var_directa = np.var(X @ w, ddof=1)
+print(f"w'Σw = {var_forma:.4f}  |  Var(Xw) = {var_directa:.4f}  |  Σσᵢ²wᵢ² (sin covarianzas) = {np.sum(w**2 * np.diag(S)):.4f}")
+```
+
+La diferencia entre la 1.ª y la 3.ª cantidad son los términos de covarianza: ignorarlos **subestima** el riesgo cuando las correlaciones son positivas.
+
+### Normal multivariada y $\operatorname{Var}(AX)=A\Sigma A'$
+
+```{python}
+#| label: mvn
+rng = np.random.default_rng(14)
+mu = np.array([0.0, 0.0]); Sig = np.array([[1.0, 0.8], [0.8, 2.0]])
+Z = rng.multivariate_normal(mu, Sig, 200_000)
+M = np.array([[1., 1.], [1., -1.]])
+print("Σ̂ =\n", np.cov(Z, rowvar=False))
+print("Cov(MZ) =\n", np.cov(Z @ M.T, rowvar=False), "\nMΣMᵀ =\n", M @ Sig @ M.T)
+```
+
+### Cuando $n<p$: la covarianza muestral es singular
+
+```{python}
+#| label: tbl-rango
+#| tbl-cap: "Rango de la covarianza muestral según n (p = 20 activos)."
+rng = np.random.default_rng(1)
+filas = {n: {"rango": np.linalg.matrix_rank(np.cov(rng.standard_normal((n, 20)), rowvar=False)),
+             "cond.": np.linalg.cond(np.cov(rng.standard_normal((n, 20)), rowvar=False))} for n in (10, 20, 21, 60, 500)}
+pd.DataFrame(filas).T.rename_axis("n").round(1)
+```
+
+Con $n\le p$ el rango es $\le n-1<p$: $\hat\Sigma$ **no es invertible** (cartera de mínima varianza imposible). Aun con $n$ apenas mayor que $p$ el condicionamiento es pésimo.
 
 ## Laboratorio (Marimo)
 

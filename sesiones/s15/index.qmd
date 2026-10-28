@@ -4,7 +4,7 @@ subtitle: "Bloque D · Álgebra matricial"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 15 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 15 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -47,6 +47,82 @@ $A$ inversible $\iff\det A\neq0\iff\operatorname{rang}A=n\iff Ax=0$ solo tiene l
 **Condicionamiento:** $\kappa(A)=\|A\|\,\|A^{-1}\|=\sigma_{\max}/\sigma_{\min}$; se pierden aprox. $\log_{10}\kappa$ cifras decimales.
 
 **Pseudoinversa:** $A^{+}=(A'A)^{-1}A'$ si $A$ tiene rango columna completo.
+
+### Demostración ejecutada: eliminación de Gauss–Jordan y rango
+
+```{python}
+#| label: rref
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from scipy import linalg
+np.set_printoptions(precision=4, suppress=True)
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+
+def rref(M, tol=1e-12):
+    M = M.astype(float).copy(); f = 0; piv = []
+    for c in range(M.shape[1]):
+        if f >= M.shape[0]: break
+        k = f + np.argmax(np.abs(M[f:, c]))
+        if abs(M[k, c]) < tol: continue
+        M[[f, k]] = M[[k, f]]; M[f] /= M[f, c]
+        for i in range(M.shape[0]):
+            if i != f: M[i] -= M[i, c] * M[f]
+        piv.append(c); f += 1
+    return M, piv
+
+A = np.array([[1., 2., 1.], [2., 4., 3.], [1., 2., 2.]])
+for nombre, b in (("b consistente", np.array([4., 11., 7.])), ("b inconsistente", np.array([4., 11., 8.]))):
+    Ab = np.column_stack([A, b])
+    print(f"{nombre}: rango(A) = {np.linalg.matrix_rank(A)}, rango([A|b]) = {np.linalg.matrix_rank(Ab)}")
+print("\nrref([A|b]) para b consistente:\n", rref(np.column_stack([A, [4., 11., 7.]]))[0])
+```
+
+Como $\operatorname{rang}A=2<3$ el sistema consistente tiene **infinitas** soluciones (una variable libre); el inconsistente no tiene ninguna (Rouché–Frobenius).
+
+### Condicionamiento: la matriz de Hilbert
+
+```{python}
+#| label: tbl-hilbert
+#| tbl-cap: "Error relativo al resolver Hx = b (x verdadero = 1) y número de condición."
+filas = {}
+for n in (4, 8, 12):
+    H = linalg.hilbert(n); xv = np.ones(n); b = H @ xv
+    filas[n] = {"cond(H)": np.linalg.cond(H), "error relativo (solve)": np.linalg.norm(np.linalg.solve(H, b) - xv) / np.linalg.norm(xv),
+                "error relativo (inv)": np.linalg.norm(np.linalg.inv(H) @ b - xv) / np.linalg.norm(xv)}
+pd.DataFrame(filas).T.rename_axis("n").map(lambda v: f"{v:.2e}")
+```
+
+Se pierden aproximadamente $\log_{10}\kappa$ cifras decimales: con $\kappa\approx10^{16}$ no queda ninguna.
+
+### Multicolinealidad en un diseño $X$
+
+```{python}
+#| label: tbl-colin
+#| tbl-cap: "Efecto de la correlación entre regresores sobre κ(X'X) y sobre la varianza de los coeficientes (n = 200, σ = 1)."
+rng = np.random.default_rng(15)
+filas = {}
+for rho in (0.0, 0.9, 0.99, 0.9999):
+    x1 = rng.standard_normal(200)
+    x2 = rho * x1 + np.sqrt(1 - rho**2) * rng.standard_normal(200)
+    X = np.column_stack([np.ones(200), x1, x2])
+    filas[rho] = {"κ(X'X)": np.linalg.cond(X.T @ X), "Var(β̂₁) = (X'X)⁻¹₁₁": np.linalg.inv(X.T @ X)[1, 1]}
+pd.DataFrame(filas).T.rename_axis("ρ").round(4)
+```
+
+### Solución de mínimos cuadrados sin invertir $X'X$
+
+```{python}
+#| label: lstsq
+rho = 0.9999
+x1 = rng.standard_normal(200); x2 = rho * x1 + np.sqrt(1 - rho**2) * rng.standard_normal(200)
+X = np.column_stack([np.ones(200), x1, x2]); y = 1 + x1 + x2 + rng.standard_normal(200)
+b_inv = np.linalg.inv(X.T @ X) @ X.T @ y
+b_qr = np.linalg.lstsq(X, y, rcond=None)[0]
+b_pinv = np.linalg.pinv(X) @ y
+print("inversa explícita:", b_inv.round(3), "\nlstsq (SVD):      ", b_qr.round(3), "\npinv:             ", b_pinv.round(3))
+```
+
+Con colinealidad **perfecta** ($\operatorname{rang}X<k$) $X'X$ es singular y `inv` falla; `lstsq`/`pinv` devuelven la solución de **norma mínima**.
 
 ## Laboratorio (Marimo)
 

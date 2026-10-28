@@ -4,7 +4,7 @@ subtitle: "Bloque D · Álgebra matricial"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 17 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 17 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -50,6 +50,88 @@ $$
 $F=\begin{pmatrix}\phi_1&\phi_2\\1&0\end{pmatrix}$; estacionario $\iff|\lambda_i(F)|<1$.
 
 **Markov:** $\pi'P=\pi'$ → $\pi$ es el autovector izquierdo asociado a $\lambda=1$.
+
+### Demostración ejecutada: autovalores y diagonalización
+
+```{python}
+#| label: eig
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+np.set_printoptions(precision=4, suppress=True)
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+
+A = np.array([[0.9, 0.3], [0.1, 0.7]])
+lam, V = np.linalg.eig(A)
+print("autovalores:", lam)
+print("A = VΛV⁻¹:", np.allclose(V @ np.diag(lam) @ np.linalg.inv(V), A))
+print("A¹⁰ por diagonalización = A¹⁰ directa:", np.allclose(V @ np.diag(lam**10) @ np.linalg.inv(V), np.linalg.matrix_power(A, 10)))
+```
+
+### Teorema espectral y definitud de una covarianza
+
+```{python}
+#| label: tbl-espectral
+#| tbl-cap: "Autovalores de la covarianza de 4 activos: todos positivos ⇒ definida positiva."
+from estalgmat import retornos_factor
+X = retornos_factor(2000, p=4, seed=3)[["A1", "A2", "A3", "A4"]].to_numpy()
+S = np.cov(X, rowvar=False)
+w, Q = np.linalg.eigh(S)
+print("Σ = QΛQᵀ:", np.allclose(Q @ np.diag(w) @ Q.T, S), "| QᵀQ = I:", np.allclose(Q.T @ Q, np.eye(4)))
+pd.DataFrame({"λ": w[::-1], "% varianza": 100 * w[::-1] / w.sum()}, index=[f"λ{i}" for i in range(1, 5)]).round(3)
+```
+
+### Cholesky: simular y entender $\Sigma=LL'$
+
+```{python}
+#| label: chol
+L = np.linalg.cholesky(S)
+print("Σ = LLᵀ:", np.allclose(L @ L.T, S), "\nL (triangular inferior) =\n", L)
+rng = np.random.default_rng(17)
+Z = rng.standard_normal((200_000, 4)) @ L.T          # filas ~ N(0, Σ)
+print("Cov(Z) ≈ Σ:", np.allclose(np.cov(Z, rowvar=False), S, atol=0.03))
+```
+
+En SVAR el mismo $L$ aparece como **identificación recursiva**: los choques estructurales $u_t=L\,\varepsilon_t$ con $\operatorname{Var}(\varepsilon_t)=I$.
+
+### Estabilidad de un AR(2) con la matriz compañera
+
+```{python}
+#| label: fig-companion
+#| fig-cap: "Autovalores de la matriz compañera de dos AR(2) y círculo unidad: el estacionario (azul) está dentro; el no estacionario (rojo) tiene un autovalor fuera."
+#| fig-height: 3.6
+def companion(phi):
+    p = len(phi); F = np.zeros((p, p)); F[0] = phi; F[1:, :-1] = np.eye(p - 1); return F
+
+fig, ax = plt.subplots(figsize=(4.4, 4.2))
+t = np.linspace(0, 2*np.pi, 300); ax.plot(np.cos(t), np.sin(t), "k", lw=.8)
+for phi, c in (([0.5, 0.3], "C0"), ([0.7, 0.5], "C3")):
+    ev = np.linalg.eigvals(companion(phi))
+    ax.scatter(ev.real, ev.imag, c=c, label=f"φ={phi}, máx|λ|={np.max(np.abs(ev)):.2f}")
+ax.set_aspect("equal"); ax.legend(fontsize=7); ax.set_xlabel("Re"); ax.set_ylabel("Im")
+```
+
+```{python}
+#| label: raices
+phi = [0.5, 0.3]
+print("raíces del polinomio 1 − φ₁z − φ₂z²:", np.roots([-phi[1], -phi[0], 1]))
+print("1/raíces = autovalores de la compañera:", np.sort(1 / np.roots([-phi[1], -phi[0], 1])), np.sort(np.linalg.eigvals(companion(phi))))
+```
+
+Las raíces del polinomio característico fuera del círculo unidad $\iff$ autovalores de la compañera dentro. La misma idea sirve para **VAR(1)**: $y_t=Ay_{t-1}+u_t$ es estacionario $\iff\max|\lambda_i(A)|<1$.
+
+### Cadena de Markov: distribución estacionaria como autovector
+
+```{python}
+#| label: tbl-markov
+#| tbl-cap: "Distribución estacionaria de una cadena de tres regímenes (crisis / normal / auge)."
+P = np.array([[0.80, 0.18, 0.02], [0.05, 0.90, 0.05], [0.02, 0.18, 0.80]])
+ev, W = np.linalg.eig(P.T)
+pi = np.real(W[:, np.argmin(np.abs(ev - 1))]); pi /= pi.sum()
+sim = np.zeros(3); s = 1; rng = np.random.default_rng(1)
+for _ in range(200_000):
+    s = rng.choice(3, p=P[s]); sim[s] += 1
+pd.DataFrame({"autovector πP = π": pi, "frecuencia simulada": sim / sim.sum()}, index=["crisis", "normal", "auge"]).round(4)
+```
 
 ## Laboratorio (Marimo)
 

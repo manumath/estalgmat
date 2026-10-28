@@ -4,7 +4,7 @@ subtitle: "Bloque D · Álgebra matricial"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 16 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 16 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -54,6 +54,103 @@ $$
 $P$ y $M$ son simétricas e idempotentes; $\operatorname{tr}(P)=k$, $\operatorname{tr}(M)=n-k$.
 
 Estimador robusto (White): $\widehat{\operatorname{Var}}_{HC}=(X'X)^{-1}\bigl(\sum e_i^2x_ix_i'\bigr)(X'X)^{-1}$.
+
+### Demostración ejecutada: MCO "a mano" frente a `statsmodels`
+
+Estimamos el CAPM de un activo contra el mercado: $r_{i,t}=\alpha+\beta\,r_{m,t}+\varepsilon_t$.
+
+```{python}
+#| label: tbl-mco
+#| tbl-cap: "MCO matricial vs. statsmodels (activo A3, β verdadero = 1,0; α verdadero = 0)."
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from scipy import stats
+from estalgmat import retornos_factor
+np.set_printoptions(precision=4, suppress=True)
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+
+df = retornos_factor(1500, p=5, seed=3)
+y = df["A3"].to_numpy(); X = np.column_stack([np.ones(len(df)), df["mercado"].to_numpy()])
+n, k = X.shape
+XtX_inv = np.linalg.inv(X.T @ X)
+b = XtX_inv @ X.T @ y
+e = y - X @ b
+s2 = e @ e / (n - k)
+V = s2 * XtX_inv
+se = np.sqrt(np.diag(V))
+r2 = 1 - e @ e / np.sum((y - y.mean())**2)
+
+fit = sm.OLS(y, X).fit()
+pd.DataFrame({"β̂ propio": b, "EE propio": se, "t propio": b / se,
+              "β̂ statsmodels": fit.params, "EE statsmodels": fit.bse}, index=["α", "β"]).round(4)
+```
+
+```{python}
+#| label: iguales
+print(f"R² propio = {r2:.5f} | statsmodels = {fit.rsquared:.5f}")
+print("coeficientes iguales:", np.allclose(b, fit.params), "| errores estándar iguales:", np.allclose(se, fit.bse))
+```
+
+### Matrices proyección
+
+```{python}
+#| label: proy
+P = X @ XtX_inv @ X.T; M = np.eye(n) - P
+print("P simétrica:", np.allclose(P, P.T), "| idempotente:", np.allclose(P @ P, P),
+      f"| tr(P) = {np.trace(P):.3f} (k = {k}) | tr(M) = {np.trace(M):.3f} (n−k = {n-k})")
+print("Xᵀe = 0 (residuos ortogonales a X):", np.allclose(X.T @ e, 0, atol=1e-8))
+```
+
+### Contraste conjunto $H_0:\alpha=0,\ \beta=1$ con la forma matricial de F
+
+```{python}
+#| label: tbl-F
+#| tbl-cap: "Prueba F de restricciones lineales Rβ = r (a mano) y con statsmodels."
+R = np.eye(2); rr = np.array([0., 1.]); q = 2
+d = R @ b - rr
+F = d @ np.linalg.inv(R @ V @ R.T) @ d / q
+pF = stats.f.sf(F, q, n - k)
+ft = fit.f_test((R, rr))
+pd.DataFrame({"F": [F, float(ft.fvalue)], "p-valor": [pF, float(ft.pvalue)]}, index=["a mano", "statsmodels"]).round(4)
+```
+
+### Errores estándar robustos (White)
+
+```{python}
+#| label: tbl-hc
+#| tbl-cap: "Errores estándar clásicos vs. robustos HC1 del β (datos con heterocedasticidad condicional)."
+meat = (X * e[:, None]**2).T @ X
+V_hc = XtX_inv @ meat @ XtX_inv * n / (n - k)
+pd.DataFrame({"EE clásico": se, "EE HC1 (a mano)": np.sqrt(np.diag(V_hc)),
+              "EE HC1 (statsmodels)": sm.OLS(y, X).fit(cov_type="HC1").bse}, index=["α", "β"]).round(4)
+```
+
+En esta muestra ambos son casi idénticos: la heterocedasticidad condicional del mercado afecta poco al $\beta$ porque el término idiosincrático es homocedástico. La diferencia crece cuando la varianza del error depende de los regresores.
+
+### Multicolinealidad: VIF
+
+```{python}
+#| label: tbl-vif
+#| tbl-cap: "VIF de un modelo con el mercado y un segundo regresor casi colineal con él."
+from statsmodels.stats.outliers_influence import variance_inflation_factor as vif
+rng = np.random.default_rng(16)
+m = df["mercado"].to_numpy(); m2 = m + rng.normal(0, 0.05, n)
+Xc = np.column_stack([np.ones(n), m, m2])
+pd.Series([vif(Xc, i) for i in (1, 2)], index=["mercado", "mercado + ruido"], name="VIF").round(1).to_frame()
+```
+
+Un VIF $>10$ indica que la varianza del coeficiente se infla más de 10 veces por la colinealidad ($\mathrm{VIF}_j=1/(1-R_j^2)$).
+
+### Cinco betas a la vez (MCO multivariado)
+
+```{python}
+#| label: tbl-betas
+#| tbl-cap: "Betas estimados para los cinco activos: B̂ = (X'X)⁻¹X'Y resuelve las 5 regresiones de una vez."
+Y = df[[f"A{i}" for i in range(1, 6)]].to_numpy()
+B = XtX_inv @ X.T @ Y
+pd.DataFrame({"α̂": B[0], "β̂": B[1], "β verdadero": df.attrs["betas"]}, index=[f"A{i}" for i in range(1, 6)]).round(3)
+```
 
 ## Laboratorio (Marimo)
 

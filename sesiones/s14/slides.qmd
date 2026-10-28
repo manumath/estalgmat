@@ -1,0 +1,90 @@
+---
+title: "Matrices: tipos, operaciones y matriz de covarianzas"
+subtitle: "Módulo 1 · Sesión 14"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S14"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+¿Cómo se calcula la volatilidad de una cartera de 50 activos sin escribir 1 275 covarianzas a mano?
+
+## Tipos de matrices
+
+| Tipo | Condición |
+|---|---|
+| Cuadrada | $n\times n$ |
+| Diagonal / identidad | $a_{ij}=0$ si $i\ne j$ / $I$ |
+| Simétrica | $A=A'$ |
+| Triangular | ceros sobre/bajo la diagonal |
+| Ortogonal | $Q'Q=I$ |
+| Idempotente | $P^2=P$ |
+
+## Operaciones y propiedades
+
+- $AB\neq BA$ en general
+- $(AB)'=B'A'$, $(AB)^{-1}=B^{-1}A^{-1}$
+- $\operatorname{tr}(AB)=\operatorname{tr}(BA)$, $\det(AB)=\det A\det B$
+
+```{python}
+import numpy as np
+A = np.array([[2., 1.], [1., 3.]]); B = np.array([[0., 1.], [1., 0.]])
+np.allclose(A @ B, B @ A), np.allclose((A @ B).T, B.T @ A.T)
+```
+
+## Vector aleatorio
+
+$$\mu=E[X],\qquad\Sigma=E[(X-\mu)(X-\mu)'],\qquad R=D^{-1/2}\Sigma D^{-1/2}$$
+
+$\Sigma$: simétrica y semidefinida positiva.
+
+$$\operatorname{Var}(w'X)=w'\Sigma w,\qquad\operatorname{Var}(AX)=A\Sigma A'$$
+
+## Covarianza de cuatro activos
+
+```{python}
+#| output-location: slide
+import matplotlib.pyplot as plt
+from estalgmat import retornos_factor
+df = retornos_factor(2000, p=4, seed=3); X = df[["A1","A2","A3","A4"]].to_numpy()
+S = np.cov(X, rowvar=False); D = np.diag(1 / np.sqrt(np.diag(S))); R = D @ S @ D
+plt.figure(figsize=(5, 4)); plt.imshow(R, vmin=-1, vmax=1, cmap="RdBu_r"); plt.colorbar()
+for i in range(4):
+    for j in range(4): plt.text(j, i, f"{R[i,j]:.2f}", ha="center", va="center")
+```
+
+## Varianza de portafolio
+
+```{python}
+w = np.array([.4, .3, .2, .1])
+print("w'Σw:", round(float(w @ S @ w), 4), "| sin covarianzas:", round(float(np.sum(w**2 * np.diag(S))), 4))
+```
+
+::: {.callout-warning}
+Ignorar covarianzas **subestima** el riesgo si las correlaciones son positivas.
+:::
+
+## Normal multivariada
+
+$X\sim N(\mu,\Sigma)\Rightarrow AX\sim N(A\mu,A\Sigma A')$
+
+Marginales y condicionales también son normales.
+
+## Cuando $n<p$
+
+::: {.callout-important}
+$\hat\Sigma=\frac1{n-1}\tilde X'\tilde X$ tiene rango $\le\min(n-1,p)$: con $n\le p$ **no es invertible**.
+:::
+
+Con $n$ apenas mayor que $p$ está muy mal condicionada (S15).
+
+## Tarea
+
+Ejercicios de álgebra de matrices + `varianza_portafolio(w, Sigma)` con validaciones.

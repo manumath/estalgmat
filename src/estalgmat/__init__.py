@@ -4,6 +4,7 @@ from .datos import (
     cargar_yahoo,
     curva_tasas,
     precios_desde_retornos,
+    retornos_factor,
     retornos_garch_t,
     serie_macro,
 )
@@ -12,6 +13,7 @@ __all__ = [
     "cargar_yahoo",
     "curva_tasas",
     "precios_desde_retornos",
+    "retornos_factor",
     "retornos_garch_t",
     "serie_macro",
 ]
