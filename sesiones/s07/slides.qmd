@@ -1,0 +1,77 @@
+---
+title: "Normal y log-normal; LGN y TCL"
+subtitle: "Módulo 1 · Sesión 07"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S07"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+Sumar 250 retornos diarios, ¿da siempre una normal?
+
+. . .
+
+¿Y si los retornos tienen colas muy pesadas?
+
+## Normal
+
+$$f(x)=\frac1{\sigma\sqrt{2\pi}}e^{-(x-\mu)^2/2\sigma^2},\qquad Z=\frac{X-\mu}\sigma$$
+
+- Regla 68–95–99,7
+- Cerrada bajo combinaciones lineales
+
+## Log-normal
+
+$$Y\sim N(\mu,\sigma^2)\Rightarrow X=e^Y\sim\text{LogN}$$
+
+$$E[X]=e^{\mu+\sigma^2/2},\quad \operatorname{Var}(X)=(e^{\sigma^2}-1)e^{2\mu+\sigma^2}$$
+
+Modelo de precios: $P_T=P_0\exp\{(\mu-\tfrac12\sigma^2)T+\sigma\sqrt T\,Z\}$
+
+## LGN y TCL
+
+::: {.incremental}
+- **LGN:** $\bar X_n\to\mu$
+- **TCL:** $\sqrt n(\bar X_n-\mu)/\sigma\xrightarrow{d}N(0,1)$ si $\sigma^2<\infty$
+- Velocidad: Berry–Esseen $O(1/\sqrt n)$
+:::
+
+## TCL por simulación
+
+```{python}
+#| output-location: slide
+import numpy as np, matplotlib.pyplot as plt
+from scipy import stats
+rng = np.random.default_rng(1)
+fig, ax = plt.subplots(2, 3, figsize=(10, 5), sharex=True); z = np.linspace(-4, 4, 300)
+src = {"Exponencial": (lambda s: rng.exponential(1, s), 1., 1.), "t(3)": (lambda s: rng.standard_t(3, s), 0., 3**.5)}
+for i, (nm, (g, mu, sd)) in enumerate(src.items()):
+    for j, n in enumerate((2, 30, 500)):
+        zz = (g((20000, n)).mean(1) - mu) / (sd / n**.5)
+        ax[i, j].hist(zz, bins=60, range=(-4, 4), density=True, alpha=.5)
+        ax[i, j].plot(z, stats.norm.pdf(z), "k"); ax[i, j].set_title(f"{nm}, n={n}", fontsize=9)
+fig.tight_layout()
+```
+
+## Cuando el TCL falla
+
+::: {.callout-warning}
+Con $\nu\le2$ (varianza infinita) el TCL clásico **no aplica**. Con $2<\nu\le4$ converge muy lento.
+:::
+
+## Agregación temporal
+
+$$r_{t\to t+h}=\sum_{j=1}^hr_{t+j},\qquad \operatorname{sd}=\sqrt h\,\sigma\ \text{(si iid)}$$
+
+Con agrupamiento de volatilidad la regla $\sqrt h$ es solo aproximada.
+
+## Tarea
+
+Probar $E[e^Y]=e^{\mu+\sigma^2/2}$ con la MGF y verificar para $\sigma\in\{0{,}1;0{,}5;1\}$.

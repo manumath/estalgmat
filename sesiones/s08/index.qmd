@@ -4,7 +4,7 @@ subtitle: "Bloque B · Probabilidad y distribuciones"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 8 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 8 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -55,6 +55,81 @@ $$
 | Jarque–Bera | $\chi^2_2$ |
 | F de significancia conjunta | $F_{q,\,n-k}$ |
 | ADF | no estándar (Dickey–Fuller) |
+
+### Demostración ejecutada: χ², t y F desde normales
+
+```{python}
+#| label: fig-derivadas
+#| fig-cap: "Construcción por simulación de χ², t y F a partir de normales (curvas negras: densidades teóricas)."
+#| fig-height: 3.2
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from scipy import stats
+rng = np.random.default_rng(2)
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+R, k, a, b = 100_000, 5, 4, 10
+
+chi = (rng.standard_normal((R, k))**2).sum(1)
+t = rng.standard_normal(R) / np.sqrt((rng.standard_normal((R, k))**2).sum(1) / k)
+F = ((rng.standard_normal((R, a))**2).sum(1) / a) / ((rng.standard_normal((R, b))**2).sum(1) / b)
+
+fig, ax = plt.subplots(1, 3, figsize=(10, 3.2))
+for axi, x, d, rg, ti in ((ax[0], chi, stats.chi2(k), (0, 25), f"χ²({k})"),
+                          (ax[1], t, stats.t(k), (-6, 6), f"t({k})"),
+                          (ax[2], F, stats.f(a, b), (0, 6), f"F({a},{b})")):
+    axi.hist(x, bins=80, range=rg, density=True, alpha=.5)
+    g = np.linspace(*rg, 300); axi.plot(g, d.pdf(g), c="k"); axi.set_title(ti)
+fig.tight_layout()
+```
+
+### Muestras normales: $\bar X$, $S^2$ y el pivote $t$
+
+```{python}
+#| label: tbl-pivote
+#| tbl-cap: "Verificación del teorema de Student–Fisher (n = 8, μ = 10, σ = 2; 50 000 réplicas)."
+n, mu, sg = 8, 10, 2
+X = rng.normal(mu, sg, (50_000, n))
+xb, s2 = X.mean(1), X.var(1, ddof=1)
+Tn = (xb - mu) / np.sqrt(s2 / n)
+Q = (n - 1) * s2 / sg**2
+pd.DataFrame({
+    "corr(X̄, S²)": [np.corrcoef(xb, s2)[0, 1]],
+    "KS p-valor T vs t(7)": [stats.kstest(Tn, stats.t(n - 1).cdf).pvalue],
+    "KS p-valor Q vs χ²(7)": [stats.kstest(Q, stats.chi2(n - 1).cdf).pvalue],
+}).round(3)
+```
+
+### Grados de libertad y colas
+
+```{python}
+#| label: tbl-criticos
+#| tbl-cap: "Cuantil 97,5 % y P(|T|>3) según ν."
+nus = [2, 3, 5, 10, 30, 100]
+tab = pd.DataFrame({"ν": nus,
+                    "t_{0,975}": [stats.t.ppf(.975, v) for v in nus],
+                    "P(|T|>3)": [2 * stats.t.sf(3, v) for v in nus]}).set_index("ν")
+tab.loc["∞"] = [stats.norm.ppf(.975), 2 * stats.norm.sf(3)]
+tab.round(4)
+```
+
+### La t como modelo de retornos
+
+```{python}
+#| label: fig-ajuste-t
+#| fig-cap: "Ajuste de t a retornos simulados y comparación de densidades en escala logarítmica."
+#| fig-height: 3.4
+from estalgmat import retornos_garch_t
+r = retornos_garch_t(5000, seed=2026)["ret"]
+nu, loc, sc = stats.t.fit(r); mu_n, sd_n = stats.norm.fit(r)
+x = np.linspace(r.min(), r.max(), 500)
+plt.figure(figsize=(7.5, 3.4))
+plt.hist(r, bins=80, density=True, alpha=.4)
+plt.plot(x, stats.norm.pdf(x, mu_n, sd_n), label="normal")
+plt.plot(x, stats.t.pdf(x, nu, loc, sc), label=f"t, ν̂ = {nu:.1f}")
+plt.yscale("log"); plt.ylim(1e-5, 2); plt.legend()
+```
+
+Con $\hat\nu$ pequeño, $\operatorname{Var}=\nu/(\nu-2)\,\sigma^2$ **no** coincide con $\sigma^2$: la escala de la $t$ no es la desviación estándar.
 
 ## Laboratorio (Marimo)
 

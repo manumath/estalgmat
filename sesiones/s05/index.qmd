@@ -4,7 +4,7 @@ subtitle: "Bloque B · Probabilidad y distribuciones"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 5 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 5 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -56,6 +56,56 @@ $$
 Con $P(\text{default})=0{,}02$, sensibilidad $0{,}90$ y falsos positivos $0{,}10$:
 $P(\text{default}\mid\text{alerta})=\frac{0{,}9\cdot0{,}02}{0{,}9\cdot0{,}02+0{,}1\cdot0{,}98}\approx 0{,}155$.
 **Tasa base** y calidad del clasificador (se retoma en logit/probit y ROC, Módulo 3).
+
+### Demostración ejecutada: conjuntos y Bayes
+
+```{python}
+#| label: conjuntos
+import numpy as np, pandas as pd
+from estalgmat import retornos_garch_t
+
+A, B = {1, 2, 3, 4}, {3, 4, 5}
+omega = set(range(1, 7))
+print("A∪B", A | B, "| A∩B", A & B, "| A\\B", A - B)
+print("De Morgan:", omega - (A | B) == (omega - A) & (omega - B))
+```
+
+Con retornos reales los eventos son **máscaras booleanas**: $A=\{r_t<-2\%\}$, $B=\{\sigma_t \text{ alta}\}$.
+
+```{python}
+#| label: tbl-condicional
+#| tbl-cap: "Probabilidad de una caída > 2 % total y condicionada al régimen de volatilidad."
+df = retornos_garch_t(20000, seed=5)
+r, s = df["ret"], df["sigma"]
+A = r < -2
+B = s > s.median()
+pd.Series({
+    "P(A)": A.mean(),
+    "P(B)": B.mean(),
+    "P(A ∩ B)": (A & B).mean(),
+    "P(A | B)": (A & B).sum() / B.sum(),
+    "P(A | B^c)": (A & ~B).sum() / (~B).sum(),
+}, name="prob.").round(4).to_frame()
+```
+
+Las caídas fuertes **no son independientes** del régimen: $P(A\mid B)\neq P(A)$. Esto es lo que modelará GARCH.
+
+### El problema de la alerta de default
+
+```{python}
+#| label: bayes
+rng = np.random.default_rng(1)
+N = 1_000_000
+default = rng.random(N) < 0.02
+alerta = np.where(default, rng.random(N) < 0.90, rng.random(N) < 0.10)
+sim = default[alerta].mean()
+teo = 0.9 * 0.02 / (0.9 * 0.02 + 0.1 * 0.98)
+print(f"P(default | alerta): simulado = {sim:.4f} · Bayes = {teo:.4f}")
+```
+
+::: {.callout-important}
+Una alerta “90 % precisa” produce **84 % de falsas alarmas** cuando la tasa base es 2 %. Evaluar un clasificador sin la tasa base conduce a conclusiones erróneas.
+:::
 
 ## Laboratorio (Marimo)
 

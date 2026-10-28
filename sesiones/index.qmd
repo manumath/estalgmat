@@ -6,7 +6,7 @@ toc: false
 Cada sesión incluye: **contenidos** (esta web), **presentación** (Reveal.js) y **laboratorio** (Marimo).
 
 ::: {.callout-note}
-**Estado de desarrollo.** Las sesiones **1–4** y **9** están desarrolladas por completo (contenidos, diapositivas y laboratorio) y sirven de plantilla. Las demás tienen el plan detallado (objetivos, agenda, contenidos, práctica y lecturas) y se completarán siguiendo la misma plantilla.
+**Estado de desarrollo.** Las sesiones **1–9** están desarrolladas por completo (contenidos, diapositivas y laboratorio) y sirven de plantilla. Las demás tienen el plan detallado (objetivos, agenda, contenidos, práctica y lecturas) y se completarán siguiendo la misma plantilla.
 :::
 
 | # | Sesión | Materiales |
@@ -15,10 +15,10 @@ Cada sesión incluye: **contenidos** (esta web), **presentación** (Reveal.js) y
 | 2 | [Python científico I: lenguaje y NumPy](s02/index.qmd) | [Slides](s02/slides.qmd) · [Lab](s02/lab.html) |
 | 3 | [Python científico II: pandas y series de tiempo](s03/index.qmd) | [Slides](s03/slides.qmd) · [Lab](s03/lab.html) |
 | 4 | [Visualización y EDA de series financieras y macro](s04/index.qmd) | [Slides](s04/slides.qmd) · [Lab](s04/lab.html) |
-| 5 | [Teoría de conjuntos y fundamentos de probabilidad](s05/index.qmd) | |
-| 6 | [Variables aleatorias, esperanza y momentos](s06/index.qmd) | |
-| 7 | [Normal y log-normal; LGN y TCL](s07/index.qmd) | |
-| 8 | [Distribuciones t de Student, χ² y F](s08/index.qmd) | |
+| 5 | [Teoría de conjuntos y fundamentos de probabilidad](s05/index.qmd) | [Slides](s05/slides.qmd) · [Lab](s05/lab.html) |
+| 6 | [Variables aleatorias, esperanza y momentos](s06/index.qmd) | [Slides](s06/slides.qmd) · [Lab](s06/lab.html) |
+| 7 | [Normal y log-normal; LGN y TCL](s07/index.qmd) | [Slides](s07/slides.qmd) · [Lab](s07/lab.html) |
+| 8 | [Distribuciones t de Student, χ² y F](s08/index.qmd) | [Slides](s08/slides.qmd) · [Lab](s08/lab.html) |
 | 9 | [Colas pesadas y asimetría en datos financieros](s09/index.qmd) | [Slides](s09/slides.qmd) · [Lab](s09/lab.html) |
 | 10 | [Estimación puntual: momentos y máxima verosimilitud](s10/index.qmd) | |
 | 11 | [Intervalos de confianza y bootstrap](s11/index.qmd) | |

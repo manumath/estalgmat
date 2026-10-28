@@ -4,7 +4,7 @@ subtitle: "Bloque B · Probabilidad y distribuciones"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 7 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 7 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -49,6 +49,70 @@ $\ \sqrt n\,(\bar X_n-\mu)/\sigma \xrightarrow{d} N(0,1)$.
 
 **Agregación:** $r_{t\to t+h}=\sum_{j=1}^h r_{t+j}$; con iid, $\operatorname{sd}=\sqrt h\,\sigma$.
 Con agrupamiento de volatilidad la regla $\sqrt h$ es solo una aproximación (se revisa en GARCH).
+
+### Demostración ejecutada: TCL
+
+```{python}
+#| label: fig-tcl
+#| fig-cap: "Distribución de la media estandarizada de n observaciones. Exponencial (asimétrica) converge; t(3) converge muy lentamente."
+#| fig-height: 5
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from scipy import stats
+rng = np.random.default_rng(1)
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+
+def medias(gen, n, reps=20_000):
+    return gen(size=(reps, n)).mean(axis=1)
+
+fuentes = {
+    "Exponencial(1)": (lambda size: rng.exponential(1, size), 1.0, 1.0),
+    "t(3)": (lambda size: rng.standard_t(3, size), 0.0, np.sqrt(3.0)),
+}
+fig, ax = plt.subplots(2, 3, figsize=(10, 5), sharex=True)
+z = np.linspace(-4, 4, 300)
+for i, (nombre, (g, mu, sd)) in enumerate(fuentes.items()):
+    for j, n in enumerate((2, 30, 500)):
+        zz = (medias(g, n) - mu) / (sd / np.sqrt(n))
+        ax[i, j].hist(zz, bins=60, density=True, range=(-4, 4), alpha=.5)
+        ax[i, j].plot(z, stats.norm.pdf(z), c="k", lw=1)
+        ax[i, j].set_title(f"{nombre}, n={n}", fontsize=9)
+fig.tight_layout()
+```
+
+Para la $t(3)$ la varianza es finita ($\nu/(\nu-2)=3$) pero el cuarto momento no existe: la convergencia es lenta. Con $\nu\le2$ el TCL clásico **no aplica**.
+
+### GBM: precios log-normales
+
+```{python}
+#| label: tbl-gbm
+#| tbl-cap: "Precio a 1 año: simulado vs. teórico (μ=8 %, σ=20 % anuales, P0 = 100)."
+mu_a, sg_a, T, P0 = 0.08, 0.20, 1.0, 100
+Z = rng.standard_normal(500_000)
+PT = P0 * np.exp((mu_a - .5*sg_a**2)*T + sg_a*np.sqrt(T)*Z)
+pd.DataFrame({
+    "simulado": [PT.mean(), PT.std(), np.median(PT)],
+    "teórico": [P0*np.exp(mu_a*T), P0*np.exp(mu_a*T)*np.sqrt(np.exp(sg_a**2*T)-1), P0*np.exp((mu_a-.5*sg_a**2)*T)],
+}, index=["E[P_T]", "sd[P_T]", "mediana"]).round(3)
+```
+
+```{python}
+#| label: fig-lognormal
+#| fig-cap: "Los precios son asimétricos (log-normal), pero sus logaritmos son normales."
+#| fig-height: 3
+fig, ax = plt.subplots(1, 2, figsize=(9, 3))
+ax[0].hist(PT, bins=80, density=True); ax[0].set_title("P_T")
+stats.probplot(np.log(PT), dist="norm", plot=ax[1]); ax[1].set_title("QQ de ln P_T")
+fig.tight_layout()
+```
+
+### Retornos simples vs. logarítmicos al agregar
+
+```{python}
+rl = rng.normal(0.0004, 0.01, 250)
+print(f"Suma de log-retornos: {rl.sum():.5f} → retorno simple anual {np.expm1(rl.sum()):.5f}")
+print(f"Suma de retornos simples: {np.expm1(rl).sum():.5f}  (no es el retorno acumulado)")
+```
 
 ## Laboratorio (Marimo)
 
