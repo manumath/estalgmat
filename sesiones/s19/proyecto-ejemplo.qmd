@@ -1,0 +1,157 @@
+---
+title: "Informe de ejemplo: análisis de una cartera de 5 activos"
+subtitle: "Proyecto integrador · Módulo 1 (versión resuelta de referencia)"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-summary: "Ver código"
+---
+
+::: {.callout-note}
+Este informe es una **referencia** de lo que se espera del proyecto: un flujo reproducible de datos → EDA → distribución → inferencia → matrices. Usa datos simulados (`estalgmat.retornos_factor`); en el proyecto real se cambia la fuente de datos y se **interpreta** cada resultado. Plantilla vacía: [`_plantilla_proyecto.qmd`](_plantilla_proyecto.qmd).
+:::
+
+```{python}
+#| label: setup
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from scipy import stats
+from sklearn.covariance import LedoitWolf
+from statsmodels.stats.multitest import multipletests
+from estalgmat import retornos_factor
+
+SEMILLA, N, P = 2026, 2500, 5
+rng = np.random.default_rng(SEMILLA)
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+df = retornos_factor(N, p=P, seed=3)
+activos = [f"A{i}" for i in range(1, P + 1)]
+R = df[activos]
+```
+
+## 1. Datos y EDA
+
+```{python}
+#| label: tbl-desc
+#| tbl-cap: "Estadísticos descriptivos de los retornos diarios (%)."
+pd.DataFrame({"media": R.mean(), "desv. est.": R.std(), "asimetría": R.skew(),
+              "curtosis exc.": R.kurt(), "mín": R.min(), "máx": R.max()}).round(3)
+```
+
+```{python}
+#| label: fig-acum
+#| fig-cap: "Retorno logarítmico acumulado (%) de los cinco activos y del mercado."
+#| fig-height: 3.4
+(df[["mercado"] + activos].cumsum()).plot(figsize=(8, 3.4), lw=.8).set_ylabel("% acumulado")
+```
+
+Hallazgos: curtosis en exceso claramente positiva en todos los activos (colas pesadas, heredadas del factor de mercado) y retornos medios pequeños frente a la volatilidad.
+
+## 2. Distribución: ¿normal o t?
+
+```{python}
+#| label: tbl-dist
+#| tbl-cap: "Ajuste normal vs. t por activo: ν̂ (MV), AIC y p-valor de Jarque–Bera."
+filas = {}
+for a in activos:
+    x = R[a].to_numpy()
+    mu, sd = stats.norm.fit(x); nu, loc, sc = stats.t.fit(x)
+    aic_n = 4 - 2 * stats.norm.logpdf(x, mu, sd).sum()
+    aic_t = 6 - 2 * stats.t.logpdf(x, nu, loc, sc).sum()
+    filas[a] = {"ν̂": nu, "AIC normal": aic_n, "AIC t": aic_t, "p JB": stats.jarque_bera(x).pvalue}
+pd.DataFrame(filas).T.round(3)
+```
+
+La $t$ gana por AIC en todos los activos y la normalidad se rechaza (p-valores de JB $\approx 0$).
+
+## 3. Inferencia
+
+```{python}
+#| label: tbl-inf
+#| tbl-cap: "Sharpe diario con IC bootstrap al 95 % (B = 3 000) y prueba t de μ = 0 con corrección de Holm."
+filas = {}
+for a in activos:
+    x = R[a].to_numpy()
+    sh = lambda v: v.mean() / v.std(ddof=1)
+    bs = stats.bootstrap((x,), sh, n_resamples=3000, method="percentile", random_state=1)
+    filas[a] = {"Sharpe": sh(x), "IC inf.": bs.confidence_interval.low, "IC sup.": bs.confidence_interval.high,
+                "p (t, μ=0)": stats.ttest_1samp(x, 0).pvalue}
+tab = pd.DataFrame(filas).T
+tab["p Holm"] = multipletests(tab["p (t, μ=0)"], method="holm")[1]
+tab.round(4)
+```
+
+Con Sharpe diario del orden de 0,01–0,03 y $n=2\,500$ ningún intervalo se aleja claramente de cero: **no hay evidencia de retorno medio distinto de cero** una vez corregidas las pruebas múltiples.
+
+## 4. Matrices
+
+### Covarianza y cartera de mínima varianza
+
+```{python}
+#| label: tbl-pesos
+#| tbl-cap: "Pesos de mínima varianza w* = Σ⁻¹1 / (1'Σ⁻¹1) con Σ muestral y con encogimiento de Ledoit–Wolf."
+X = R.to_numpy()
+def minvar(S):
+    z = np.linalg.solve(S, np.ones(len(S))); return z / z.sum()
+S = np.cov(X, rowvar=False); S_lw = LedoitWolf().fit(X).covariance_
+w, w_lw = minvar(S), minvar(S_lw)
+print(f"κ(Σ̂) = {np.linalg.cond(S):.1f} | κ(Σ̂_LW) = {np.linalg.cond(S_lw):.1f}")
+pd.DataFrame({"muestral": w, "Ledoit–Wolf": w_lw, "igual 1/p": np.ones(P) / P}, index=activos).round(3)
+```
+
+### Incertidumbre de los pesos (bootstrap)
+
+```{python}
+#| label: tbl-boot-w
+#| tbl-cap: "Desviación estándar bootstrap de los pesos de mínima varianza (B = 500)."
+W = np.array([minvar(np.cov(X[rng.integers(0, N, N)], rowvar=False)) for _ in range(500)])
+pd.DataFrame({"peso": w, "EE bootstrap": W.std(0), "IC 2,5 %": np.percentile(W, 2.5, 0), "IC 97,5 %": np.percentile(W, 97.5, 0)},
+             index=activos).round(3)
+```
+
+### Desempeño fuera de muestra
+
+```{python}
+#| label: tbl-oos
+#| tbl-cap: "Varianza de la cartera en la segunda mitad (estimando en la primera): igual ponderación vs. mínima varianza."
+h = N // 2
+S1 = np.cov(X[:h], rowvar=False); w1 = minvar(S1); w1_lw = minvar(LedoitWolf().fit(X[:h]).covariance_)
+eq = np.ones(P) / P
+pd.DataFrame({"varianza OOS": [np.var(X[h:] @ eq, ddof=1), np.var(X[h:] @ w1, ddof=1), np.var(X[h:] @ w1_lw, ddof=1)]},
+             index=["igual 1/p", "mínima varianza", "mín. varianza (LW)"]).round(4)
+```
+
+### Betas por MCO matricial y PCA
+
+```{python}
+#| label: tbl-capm
+#| tbl-cap: "Beta (MCO) con error estándar HC1 y beta verdadero."
+Xm = sm.add_constant(df["mercado"].to_numpy())
+filas = {}
+for i, a in enumerate(activos):
+    f = sm.OLS(R[a].to_numpy(), Xm).fit(cov_type="HC1")
+    filas[a] = {"β̂": f.params[1], "EE HC1": f.bse[1], "β verdadero": df.attrs["betas"][i]}
+pd.DataFrame(filas).T.round(3)
+```
+
+```{python}
+#| label: fig-pca
+#| fig-cap: "PCA de la matriz de correlación: varianza explicada por componente."
+#| fig-height: 3
+Z = (R - R.mean()) / R.std()
+s = np.linalg.svd(Z.to_numpy(), compute_uv=False); ve = s**2 / np.sum(s**2)
+Vt = np.linalg.svd(Z.to_numpy(), full_matrices=False)[2]
+pc1 = Z.to_numpy() @ Vt[0]
+plt.figure(figsize=(6, 3)); plt.bar(range(1, P + 1), 100 * ve); plt.xlabel("componente"); plt.ylabel("% varianza")
+print(f"PC1 explica {100*ve[0]:.1f} % · |corr(PC1, mercado)| = {abs(np.corrcoef(pc1, df['mercado'])[0,1]):.3f}")
+```
+
+## 5. Conclusiones y limitaciones
+
+- Los retornos tienen **colas pesadas** ($\hat\nu$ pequeño): la normalidad se rechaza y la $t$ ajusta mejor.
+- **Sin evidencia de retornos medios no nulos** tras corregir pruebas múltiples.
+- Un único factor (el mercado) domina la covarianza (PC1) y los betas se recuperan bien con MCO.
+- La cartera de mínima varianza reduce mucho el riesgo fuera de muestra respecto a la igual ponderación (varianza OOS cercana a la mitad), pero **permite posiciones cortas** (aquí en A5): con restricción de no negatividad el resultado cambia.
+- Los pesos se estiman con precisión moderada (EE bootstrap de 2–3 puntos porcentuales; el IC de A4 contiene el 0). El encogimiento de Ledoit–Wolf casi no los modifica porque $n\gg p$; su efecto es decisivo cuando $n$ es comparable a $p$.
+- **Limitaciones:** datos simulados; se ignora el agrupamiento de volatilidad (no se usan errores condicionales); el bootstrap iid ignora la dependencia temporal; resultados *in-sample* salvo la tabla fuera de muestra.

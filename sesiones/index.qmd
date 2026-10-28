@@ -6,7 +6,7 @@ toc: false
 Cada sesión incluye: **contenidos** (esta web), **presentación** (Reveal.js) y **laboratorio** (Marimo).
 
 ::: {.callout-note}
-**Estado de desarrollo.** Las sesiones **1–18** están desarrolladas por completo (contenidos, diapositivas y laboratorio) y sirven de plantilla. Las demás tienen el plan detallado (objetivos, agenda, contenidos, práctica y lecturas) y se completarán siguiendo la misma plantilla.
+**Estado de desarrollo.** Las **20 sesiones** están desarrolladas: contenidos con código ejecutable, diapositivas (Reveal.js) y laboratorio (Marimo). La sesión 19 incluye además un [informe de ejemplo](s19/proyecto-ejemplo.qmd) y una plantilla para el proyecto integrador.
 :::
 
 | # | Sesión | Materiales |
@@ -29,5 +29,5 @@ Cada sesión incluye: **contenidos** (esta web), **presentación** (Reveal.js) y
 | 16 | [MCO en forma matricial](s16/index.qmd) | [Slides](s16/slides.qmd) · [Lab](s16/lab.html) |
 | 17 | [Autovalores, autovectores y formas cuadráticas](s17/index.qmd) | [Slides](s17/slides.qmd) · [Lab](s17/lab.html) |
 | 18 | [SVD y PCA](s18/index.qmd) | [Slides](s18/slides.qmd) · [Lab](s18/lab.html) |
-| 19 | [Taller integrador: análisis de una cartera](s19/index.qmd) | |
-| 20 | [Evaluación final y puente al Módulo 2](s20/index.qmd) | |
+| 19 | [Taller integrador: análisis de una cartera](s19/index.qmd) | [Slides](s19/slides.qmd) · [Lab](s19/lab.html) |
+| 20 | [Evaluación final y puente al Módulo 2](s20/index.qmd) | [Slides](s20/slides.qmd) · [Lab](s20/lab.html) |

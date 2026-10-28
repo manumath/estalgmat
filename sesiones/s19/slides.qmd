@@ -1,0 +1,97 @@
+---
+title: "Taller integrador: análisis de una cartera"
+subtitle: "Módulo 1 · Sesión 19"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S19"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+Con 5 activos y 10 años de datos:
+
+. . .
+
+¿Qué cartera de mínima varianza obtengo y **qué tan confiable es**?
+
+## Hoy en 90 minutos
+
+| Min | Bloque |
+|---|---|
+| 0–10 | Equipos y repositorio |
+| 10–35 | **Sprint 1** · Datos y distribución |
+| 35–45 | Revisión cruzada |
+| 50–70 | **Sprint 2** · Inferencia |
+| 70–85 | **Sprint 3** · Matrices |
+| 85–90 | Cierre y pendientes |
+
+## Flujo del proyecto
+
+::: {.incremental}
+1. Datos reproducibles (`uv run python panel.py`)
+2. EDA → colas, asimetría, agrupamiento
+3. Inferencia → EMV, IC, pruebas
+4. Matrices → $\hat\Sigma$, $w^\star$, betas, PCA
+5. Informe → `uv run quarto render`
+:::
+
+## Sprint 1 · Datos y distribución
+
+- Panel limpio, sin look-ahead
+- ≥ 3 figuras de EDA
+- Normal vs. $t$ (AIC, QQ, JB)
+- Probabilidades de cola y VaR 99 %
+
+## Sprint 2 · Inferencia
+
+- EMV con errores estándar
+- IC analítico y **bootstrap** (iid y bloques)
+- ≥ 2 pruebas de hipótesis
+- **Corrección** por múltiples pruebas
+
+## Sprint 3 · Mínima varianza
+
+$$
+\min_w\ w'\Sigma w\ \text{ s.a. } \mathbf 1'w=1
+\ \Longrightarrow\ 
+w^\star=\frac{\Sigma^{-1}\mathbf 1}{\mathbf 1'\Sigma^{-1}\mathbf 1}
+$$
+
+```python
+z = np.linalg.solve(S, np.ones(p)); w = z / z.sum()   # nunca inv(S)
+```
+
+## Incertidumbre de $\hat w^\star$
+
+```{python}
+#| output-location: slide
+import numpy as np, pandas as pd, matplotlib.pyplot as plt
+from estalgmat import retornos_factor
+df = retornos_factor(2500, p=5, seed=3); X = df[[f"A{i}" for i in range(1, 6)]].to_numpy()
+def minvar(S): z = np.linalg.solve(S, np.ones(len(S))); return z / z.sum()
+rng = np.random.default_rng(1)
+W = np.array([minvar(np.cov(X[rng.integers(0, len(X), len(X))], rowvar=False)) for _ in range(400)])
+plt.figure(figsize=(8, 3.6)); plt.boxplot(W, tick_labels=[f"A{i}" for i in range(1, 6)])
+plt.axhline(0, c="k", lw=.5); plt.ylabel("peso"); plt.grid(alpha=.3)
+```
+
+## Autoevaluación
+
+::: {.incremental}
+1. ¿Cada resultado tiene **interpretación**?
+2. ¿Se revisaron los **supuestos**?
+3. ¿Hay **IC** junto a cada estimación?
+4. ¿Reproducible desde cero con semilla?
+5. ¿Se declararon las **limitaciones**?
+:::
+
+## Entrega
+
+- Informe Quarto (HTML o PDF) + presentación de 8 min + 2 min de preguntas
+- Referencia: [informe de ejemplo](proyecto-ejemplo.qmd) y `_plantilla_proyecto.qmd`

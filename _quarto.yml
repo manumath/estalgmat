@@ -4,6 +4,7 @@ project:
   pre-render: uv run python scripts/export_labs.py
   resources:
     - sesiones/*/lab.html
+    - sesiones/s19/_plantilla_proyecto.qmd
 
 website:
   title: "Módulo 1 · Estadística y Álgebra Matricial"

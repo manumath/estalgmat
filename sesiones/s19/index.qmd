@@ -4,7 +4,7 @@ subtitle: "Bloque E · Integración"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 19 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 19 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -54,6 +54,39 @@ w^{\star}=\frac{\Sigma^{-1}\mathbf 1}{\mathbf 1'\Sigma^{-1}\mathbf 1}.
 $$
 
 Discusión de la **incertidumbre** de $\hat w^{\star}$ (bootstrap) y del mal condicionamiento cuando $n/p$ es pequeño.
+
+### Materiales del taller
+
+- **Informe de ejemplo resuelto** (referencia de nivel y estructura): [Informe de ejemplo](proyecto-ejemplo.qmd).
+- **Plantilla vacía** para el equipo: [`_plantilla_proyecto.qmd`](_plantilla_proyecto.qmd) (copiar a la carpeta del proyecto del equipo).
+
+### Checklist por sprint
+
+| Sprint | Entregable mínimo | Sesiones de referencia |
+|---|---|---|
+| **1 · Datos y distribución** | Panel limpio, ≥ 3 figuras de EDA, ajuste normal vs. $t$, probabilidades de cola | S3, S4, S7–S9 |
+| **2 · Inferencia** | EMV con EE, IC analítico y bootstrap, 2 pruebas de hipótesis, corrección múltiple | S10–S13 |
+| **3 · Matrices** | $\hat\Sigma$ y su condicionamiento, cartera de mínima varianza con incertidumbre, betas por MCO (HC) y PCA | S14–S18 |
+
+### Criterios de calidad (autoevaluación del equipo)
+
+1. ¿Cada resultado tiene una **interpretación** en una frase, no solo un número?
+2. ¿Se verificaron los **supuestos** (normalidad, independencia, homocedasticidad) y se dijo qué pasa si fallan?
+3. ¿Hay **intervalos** o errores estándar junto a cada estimación puntual?
+4. ¿`uv sync && uv run quarto render` funciona desde cero con **semilla fija**?
+5. ¿Se declararon las **limitaciones** (datos, método, dependencia temporal)?
+
+### Fórmulas de referencia para el sprint 3
+
+$$
+w^{\star}=\frac{\Sigma^{-1}\mathbf 1}{\mathbf 1'\Sigma^{-1}\mathbf 1},\qquad
+\hat\beta=(X'X)^{-1}X'y,\qquad
+\tilde X=U\Sigma V'\ \text{(PCA)}.
+$$
+
+::: {.callout-tip}
+Resolver siempre `np.linalg.solve(S, np.ones(p))` en lugar de `inv(S)`, y reportar $\kappa(\hat\Sigma)$.
+:::
 
 ## Laboratorio (Marimo)
 
