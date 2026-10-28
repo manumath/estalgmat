@@ -1,0 +1,88 @@
+---
+title: "Pruebas no paramétricas y de bondad de ajuste"
+subtitle: "Módulo 1 · Sesión 13"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S13"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+Probamos **20** efectos de calendario. Uno sale significativo al 5 %.
+
+. . .
+
+¿Descubrimos algo?
+
+## Pruebas basadas en rangos
+
+| Situación | Prueba |
+|---|---|
+| 1 muestra / pareadas | signos, Wilcoxon |
+| 2 muestras | Mann–Whitney |
+| $k$ muestras | Kruskal–Wallis |
+
+No suponen normalidad; $U=\sum\mathbf 1\{x_i>y_j\}$ mide $P(X>Y)$.
+
+## Bondad de ajuste
+
+- Kolmogorov–Smirnov: $D=\sup|F_n-F_0|$
+- Anderson–Darling: más peso en las colas
+- Shapiro–Wilk (muestras pequeñas)
+- **Jarque–Bera**: $\frac n6(\hat\gamma_1^2+\frac14(\hat\kappa-3)^2)\sim\chi^2_2$
+
+::: {.callout-warning}
+Con parámetros estimados, KS necesita corrección (Lilliefors).
+:::
+
+## Permutación
+
+Bajo $H_0$ las etiquetas son intercambiables:
+
+```{python}
+import numpy as np
+from scipy import stats
+rng = np.random.default_rng(13)
+x = rng.standard_t(3, 600) * .01
+a, b = x[:300], x[300:] + .0015
+{"Welch": round(stats.ttest_ind(a, b, equal_var=False).pvalue, 4),
+ "Mann–Whitney": round(stats.mannwhitneyu(a, b).pvalue, 4),
+ "permutación": round(stats.permutation_test((a, b), lambda u, v: u.mean() - v.mean(), n_resamples=3000, random_state=1).pvalue, 4)}
+```
+
+## Pruebas múltiples
+
+$P(\ge 1\text{ falso positivo})=1-(1-\alpha)^m$; con $m=20$: **64 %**.
+
+- Bonferroni: $\alpha/m$
+- Holm: secuencial, más potente
+- Benjamini–Hochberg: controla la **FDR**
+
+## 20 anomalías sobre ruido puro
+
+```{python}
+#| output-location: slide
+from statsmodels.stats.multitest import multipletests
+import pandas as pd
+R = 400; sin, bon, bh = [], [], []
+for _ in range(R):
+    p = np.array([stats.ttest_1samp(rng.standard_normal(250), 0).pvalue for _ in range(20)])
+    sin.append((p < .05).any()); bon.append(multipletests(p, method="bonferroni")[0].any()); bh.append(multipletests(p, method="fdr_bh")[0].any())
+pd.Series({"sin corrección": np.mean(sin), "Bonferroni": np.mean(bon), "BH": np.mean(bh)}, name="P(≥1 falso)").round(3).to_frame()
+```
+
+## Data snooping
+
+::: {.callout-important}
+Probar muchas estrategias sobre los mismos datos y reportar la mejor sobreestima el desempeño. Registrar **todas** las pruebas realizadas.
+:::
+
+## Tarea
+
+Evaluar si los retornos difieren antes/después de un evento con Mann–Whitney y permutación; comparar con la prueba t.

@@ -1,0 +1,81 @@
+---
+title: "Pruebas de hipótesis paramétricas (Z, t)"
+subtitle: "Módulo 1 · Sesión 12"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S12"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+Un fondo reporta un retorno medio diario de 0,04 %.
+
+. . .
+
+¿Es distinto de cero o es **azar**?
+
+## Marco de decisión
+
+| | $H_0$ cierta | $H_0$ falsa |
+|---|---|---|
+| Rechazar | Error tipo I ($\alpha$) | Potencia ($1-\beta$) |
+| No rechazar | OK | Error tipo II ($\beta$) |
+
+p-valor $=P(\text{estadístico}\ge\text{observado}\mid H_0)$
+
+::: {.callout-warning}
+El p-valor **no** es la probabilidad de que $H_0$ sea cierta.
+:::
+
+## Prueba t
+
+$$t=\frac{\bar x-\mu_0}{s/\sqrt n}\ \overset{H_0}{\sim}\ t_{n-1}$$
+
+- Dos muestras (Welch): $\dfrac{\bar x_1-\bar x_2}{\sqrt{s_1^2/n_1+s_2^2/n_2}}$
+- Pareada: sobre las diferencias
+- Varianza: $(n-1)s^2/\sigma_0^2\sim\chi^2_{n-1}$; razón: $F$
+
+## Test ↔ intervalo
+
+Se rechaza $H_0:\mu=\mu_0$ al nivel $\alpha$ $\iff$ $\mu_0\notin$ IC al $(1-\alpha)$.
+
+```{python}
+import numpy as np
+from scipy import stats
+from estalgmat import retornos_garch_t
+x = retornos_garch_t(1000, mu=0.06, seed=7)["ret"].to_numpy()
+t, p = stats.ttest_1samp(x, 0)
+print(f"t = {t:.2f}, p = {p:.4f}, IC95 = {np.round(stats.t.interval(.95, len(x)-1, x.mean(), stats.sem(x)), 4)}")
+```
+
+## Potencia
+
+```{python}
+#| output-location: slide
+import matplotlib.pyplot as plt
+rng = np.random.default_rng(12)
+def pot(d, n, R=3000):
+    x = rng.normal(d, 1, (R, n)); t = x.mean(1) / (x.std(1, ddof=1) / n**.5)
+    return np.mean(np.abs(t) > stats.t.ppf(.975, n - 1))
+ds = np.linspace(0, .6, 13); plt.figure(figsize=(8, 3.6))
+for n in (25, 100, 400): plt.plot(ds, [pot(d, n) for d in ds], "o-", ms=3, label=f"n={n}")
+plt.axhline(.8, ls="--", c="gray"); plt.xlabel("δ = μ/σ"); plt.ylabel("potencia"); plt.legend(); plt.grid(alpha=.3)
+```
+
+## ¿Y la dependencia?
+
+::: {.callout-important}
+Con GARCH sin autocorrelación en la media, la prueba t conserva ≈ 5 %. Con **autocorrelación** (o regresores heterocedásticos) el t usual **pierde** su tamaño nominal.
+:::
+
+Solución en el Módulo 2: errores estándar **HAC** (Newey–West).
+
+## Tarea
+
+Contrastar si el retorno medio es nulo y si la volatilidad cambió tras una fecha: reportar efecto, IC y p-valor con interpretación.

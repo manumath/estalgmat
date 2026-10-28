@@ -1,0 +1,84 @@
+---
+title: "Intervalos de confianza y bootstrap"
+subtitle: "Módulo 1 · Sesión 11"
+format:
+  revealjs:
+    theme: [simple, ../../assets/slides.scss]
+    slide-number: c/t
+    transition: fade
+    footer: "Módulo 1 · S11"
+    preview-links: auto
+execute:
+  echo: true
+---
+
+## Pregunta motivadora
+
+El Sharpe de una estrategia es 0,8 en la muestra.
+
+. . .
+
+¿Con qué **incertidumbre**?
+
+## Intervalos con pivotes
+
+$$\bar X\pm t_{n-1,1-\alpha/2}\frac S{\sqrt n},\qquad
+\left[\frac{(n-1)S^2}{\chi^2_{n-1,1-\alpha/2}},\frac{(n-1)S^2}{\chi^2_{n-1,\alpha/2}}\right]$$
+
+::: {.callout-note}
+**Interpretación:** el 95 % es la proporción de intervalos construidos así que cubrirían $\theta$ — no la probabilidad de que $\theta$ esté en *este* intervalo.
+:::
+
+## Cien intervalos
+
+```{python}
+#| output-location: slide
+import numpy as np, matplotlib.pyplot as plt
+from scipy import stats
+rng = np.random.default_rng(11)
+x = rng.normal(0, 1, (100, 30)); m = x.mean(1); e = stats.t.ppf(.975, 29) * x.std(1, ddof=1) / np.sqrt(30)
+f = (m - e > 0) | (m + e < 0)
+plt.figure(figsize=(8, 3.8)); plt.vlines(range(100), m - e, m + e, colors=np.where(f, "r", "C0"))
+plt.axhline(0, c="k"); plt.title(f"{f.sum()} de 100 no contienen μ")
+```
+
+## Método delta
+
+$$\sqrt n(\hat\theta-\theta)\to N(0,V)\ \Rightarrow\ \sqrt n(g(\hat\theta)-g(\theta))\to N(0,g'(\theta)^2V)$$
+
+Sharpe: $\operatorname{Var}(\widehat{SR})\approx\frac1n\bigl(1+\tfrac12SR^2\bigr)$ (iid normal)
+
+## Bootstrap
+
+::: {.incremental}
+1. Remuestrear con reemplazo $x^{*}_1,\dots,x^{*}_n$
+2. Calcular $\hat\theta^{*}$; repetir $B$ veces
+3. Percentil: $[\hat\theta^*_{2{,}5\%},\ \hat\theta^*_{97{,}5\%}]$
+:::
+
+Variantes: básico, BCa. Funciona con estadísticos complicados (Sharpe, cuantiles).
+
+## Dependencia: bloques
+
+```{python}
+#| output-location: fragment
+def boot_bloques(x, stat, B=1000, l=None):
+    n = len(x); l = l or round(n ** (1/3)); k = -(-n // l)
+    return np.array([stat(np.concatenate([x[i:i+l] for i in rng.integers(0, n-l+1, k)])[:n]) for _ in range(B)])
+from estalgmat import retornos_garch_t
+r = retornos_garch_t(1500, seed=2026)["ret"].to_numpy()
+var99 = lambda x: -np.quantile(x, .01)
+np.percentile(boot_bloques(r, var99), [2.5, 97.5]).round(3)
+```
+
+Bloques de longitud $\ell\approx T^{1/3}$ preservan la dependencia de corto plazo.
+
+## Cuantiles extremos
+
+::: {.callout-warning}
+El IC del VaR es **asimétrico** y ancho: se estima con pocas observaciones de la cola. El bootstrap puede fallar con colas muy pesadas ($\nu\le 2$).
+:::
+
+## Tarea
+
+IC bootstrap al 95 % para la curtosis y el VaR 1 % de un activo; explicar la asimetría del IC.

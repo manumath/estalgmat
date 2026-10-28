@@ -4,7 +4,7 @@ subtitle: "Bloque C · Inferencia estadística"
 ---
 
 ::: {.sesion-meta}
-<span class="badge-s">Sesión 12 de 20</span> <span>⏱ 90 min</span> <span>📽 Presentación: por desarrollar</span> <span>🧪 Laboratorio: por desarrollar</span>
+<span class="badge-s">Sesión 12 de 20</span> <span>⏱ 90 min</span> <a href="slides.qmd">📽 Presentación</a> <a href="lab.html">🧪 Laboratorio</a> <a href="lab.py">⬇ lab.py</a>
 :::
 
 ## Objetivos de aprendizaje
@@ -49,6 +49,85 @@ $$
 **Welch:** $t=\dfrac{\bar x_1-\bar x_2}{\sqrt{s_1^2/n_1+s_2^2/n_2}}$ con gl de Satterthwaite.
 
 **Alerta:** con $r_t$ heterocedástico, el estadístico t usual puede tener tamaño distinto del nominal → errores robustos (HAC) en el Módulo 2.
+
+### Demostración ejecutada: pruebas t sobre retornos
+
+```{python}
+#| label: tbl-ttest
+#| tbl-cap: "¿Es nulo el retorno medio? Prueba t de una muestra para tres activos simulados."
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from scipy import stats
+from estalgmat import retornos_garch_t
+rng = np.random.default_rng(12)
+plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": .25})
+
+filas = {}
+for nom, mu in (("A (μ=0)", 0.0), ("B (μ=0,03)", 0.03), ("C (μ=0,06)", 0.06)):
+    x = retornos_garch_t(1000, mu=mu, seed=len(nom) + int(mu * 100))["ret"].to_numpy()
+    t, p = stats.ttest_1samp(x, 0)
+    ic = stats.t.interval(.95, len(x) - 1, loc=x.mean(), scale=stats.sem(x))
+    filas[nom] = {"media": x.mean(), "t": t, "p-valor": p, "IC inf.": ic[0], "IC sup.": ic[1]}
+pd.DataFrame(filas).T.round(4)
+```
+
+El IC al 95 % contiene el 0 **si y solo si** no se rechaza $H_0:\mu=0$ al 5 % (dualidad test–intervalo).
+
+### Welch: ¿cambió la volatilidad tras un evento?
+
+```{python}
+#| label: tbl-welch
+#| tbl-cap: "Comparación de medias (Welch) y de varianzas (razón de varianzas, F) antes y después del día 500."
+x = retornos_garch_t(1000, seed=3)["ret"].to_numpy()
+a, b = x[:500], x[500:]
+tw = stats.ttest_ind(a, b, equal_var=False)
+Fv = a.var(ddof=1) / b.var(ddof=1)
+pF = 2 * min(stats.f.cdf(Fv, 499, 499), stats.f.sf(Fv, 499, 499))
+pd.DataFrame({"estadístico": [tw.statistic, Fv], "p-valor": [tw.pvalue, pF]},
+             index=["Welch (medias)", "razón de varianzas"]).round(4)
+```
+
+La prueba F de varianzas es **muy sensible a la no normalidad** (colas pesadas); aquí conviene leerla con cautela y contrastar con Levene o con un bootstrap.
+
+### Potencia por simulación
+
+```{python}
+#| label: fig-potencia
+#| fig-cap: "Potencia de la prueba t (α = 5 %) según el tamaño del efecto δ = μ/σ para distintos n (datos normales)."
+#| fig-height: 3.3
+def potencia(delta, n, reps=4000):
+    x = rng.normal(delta, 1, (reps, n))
+    t = x.mean(1) / (x.std(1, ddof=1) / np.sqrt(n))
+    return np.mean(np.abs(t) > stats.t.ppf(.975, n - 1))
+ds = np.linspace(0, .6, 13)
+plt.figure(figsize=(7.5, 3.3))
+for n in (25, 100, 400):
+    plt.plot(ds, [potencia(d, n) for d in ds], marker="o", ms=3, label=f"n = {n}")
+plt.axhline(.05, ls=":", c="gray"); plt.axhline(.8, ls="--", c="gray", lw=.7)
+plt.xlabel("δ = μ/σ"); plt.ylabel("potencia"); plt.legend()
+```
+
+Un retorno medio diario de 0,04 % con volatilidad de 1 % es $\delta=0{,}04$: con $n=400$ la potencia es **baja** (≈ 13 %). Se necesitan miles de observaciones para detectar efectos de ese tamaño.
+
+### Tamaño real de la prueba t con datos GARCH-$t$
+
+```{python}
+#| label: tbl-tamano
+#| tbl-cap: "Tasa de rechazo bajo H₀ verdadera (nivel nominal 5 %, 1 500 réplicas)."
+def tamano(gen, n, reps=1500):
+    rech = 0
+    for _ in range(reps):
+        x = gen(n); rech += stats.ttest_1samp(x, 0).pvalue < .05
+    return rech / reps
+g_norm = lambda n: rng.normal(0, 1, n)
+g_t3 = lambda n: rng.standard_t(3, n)
+g_garch = lambda n: retornos_garch_t(n, mu=0.0, seed=int(rng.integers(1e9)))["ret"].to_numpy()
+pd.DataFrame({"normal iid": [tamano(g_norm, n) for n in (50, 250)],
+              "t(3) iid": [tamano(g_t3, n) for n in (50, 250)],
+              "GARCH-t": [tamano(g_garch, n) for n in (50, 250)]}, index=[50, 250]).rename_axis("n").round(3)
+```
+
+Con colas pesadas o con GARCH **sin** autocorrelación en la media, la prueba t de una media conserva aproximadamente el 5 % nominal (la media de $ es una diferencia de martingala y el TCL sigue aplicando). El problema aparece cuando hay **autocorrelación** en la media o en regresiones donde los regresores comparten la heterocedasticidad: ahí se necesitan errores estándar robustos (HAC) en el Módulo 2.
 
 ## Laboratorio (Marimo)
 

@@ -6,7 +6,7 @@ toc: false
 Cada sesión incluye: **contenidos** (esta web), **presentación** (Reveal.js) y **laboratorio** (Marimo).
 
 ::: {.callout-note}
-**Estado de desarrollo.** Las sesiones **1–9** están desarrolladas por completo (contenidos, diapositivas y laboratorio) y sirven de plantilla. Las demás tienen el plan detallado (objetivos, agenda, contenidos, práctica y lecturas) y se completarán siguiendo la misma plantilla.
+**Estado de desarrollo.** Las sesiones **1–13** están desarrolladas por completo (contenidos, diapositivas y laboratorio) y sirven de plantilla. Las demás tienen el plan detallado (objetivos, agenda, contenidos, práctica y lecturas) y se completarán siguiendo la misma plantilla.
 :::
 
 | # | Sesión | Materiales |
@@ -20,10 +20,10 @@ Cada sesión incluye: **contenidos** (esta web), **presentación** (Reveal.js) y
 | 7 | [Normal y log-normal; LGN y TCL](s07/index.qmd) | [Slides](s07/slides.qmd) · [Lab](s07/lab.html) |
 | 8 | [Distribuciones t de Student, χ² y F](s08/index.qmd) | [Slides](s08/slides.qmd) · [Lab](s08/lab.html) |
 | 9 | [Colas pesadas y asimetría en datos financieros](s09/index.qmd) | [Slides](s09/slides.qmd) · [Lab](s09/lab.html) |
-| 10 | [Estimación puntual: momentos y máxima verosimilitud](s10/index.qmd) | |
-| 11 | [Intervalos de confianza y bootstrap](s11/index.qmd) | |
-| 12 | [Pruebas de hipótesis paramétricas (Z, t)](s12/index.qmd) | |
-| 13 | [Pruebas no paramétricas y de bondad de ajuste](s13/index.qmd) | |
+| 10 | [Estimación puntual: momentos y máxima verosimilitud](s10/index.qmd) | [Slides](s10/slides.qmd) · [Lab](s10/lab.html) |
+| 11 | [Intervalos de confianza y bootstrap](s11/index.qmd) | [Slides](s11/slides.qmd) · [Lab](s11/lab.html) |
+| 12 | [Pruebas de hipótesis paramétricas (Z, t)](s12/index.qmd) | [Slides](s12/slides.qmd) · [Lab](s12/lab.html) |
+| 13 | [Pruebas no paramétricas y de bondad de ajuste](s13/index.qmd) | [Slides](s13/slides.qmd) · [Lab](s13/lab.html) |
 | 14 | [Matrices: tipos, operaciones y matriz de covarianzas](s14/index.qmd) | |
 | 15 | [Sistemas lineales, rango e inversibilidad](s15/index.qmd) | |
 | 16 | [MCO en forma matricial](s16/index.qmd) | |
